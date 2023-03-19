@@ -4,7 +4,7 @@
   <strong>Mapbox vector tile reader in Rust</strong>
 </div>
 <div align="center">
-  A library for decoding and reading mapbox vector tiles
+  A library for decoding and reading mapbox vector tiles in Rust
 </div>
 <br>
 <div align="center">
