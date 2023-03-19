@@ -1,0 +1,27 @@
+name: Post build environment
+description: Clean up build environment actions
+
+inputs:
+  cargo-cache-primary-key:
+    description: Primary key of cargo cache restore action
+    required: true
+  cargo-cache-hit:
+    description: A boolean value to indicate an exact match was found for the cargo cache restore action
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Cache cargo output (save)
+      if: inputs.cargo-cache-hit != 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+      uses: actions/cache/save@v3.3.1
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/.crates.toml
+          ~/.cargo/.crates2.json
+          ~/.cargo/.package-cache
+          ~/.cargo/registry/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ inputs.cargo-cache-primary-key }}

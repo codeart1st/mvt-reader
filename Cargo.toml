@@ -1,0 +1,20 @@
+[package]
+name = "mvt-reader"
+version = "0.1.0"
+description = "A library for decoding and reading mapbox vector tiles"
+authors = ["Paul Lange <paul.lange@data-experts.de>"]
+repository = "https://github.com/codeart1st/mvt-reader"
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+geo-types = "0.7.9"
+prost = { version = "0.11.8", default-features = false, features = ["prost-derive"] }
+
+[dev-dependencies]
+serde = "1.0.156"
+serde_json = "1.0.94"
+prost = { version = "0.11.8" }
+
+[build-dependencies]
+prost-build = "0.11.8"

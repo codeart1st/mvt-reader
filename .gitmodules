@@ -1,0 +1,6 @@
+[submodule "vector-tile-spec"]
+	path = vector-tile-spec
+	url = https://github.com/mapbox/vector-tile-spec
+[submodule "mvt-fixtures"]
+	path = mvt-fixtures
+	url = https://github.com/mapbox/mvt-fixtures

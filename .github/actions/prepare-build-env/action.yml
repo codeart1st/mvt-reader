@@ -1,0 +1,62 @@
+name: Prepare build environment
+description: Ensures that everything is prepared for our build jobs
+
+outputs:
+  cargo-cache-primary-key:
+    description: Primary key of cargo cache restore action
+    value: ${{ steps.cargo-cache.outputs.cache-primary-key }}
+  cargo-cache-hit:
+    description: A boolean value to indicate an exact match was found for the cargo cache restore action
+    value: ${{ steps.cargo-cache.outputs.cache-hit }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Cache rust-toolchain (restore)
+      id: rustup-cache
+      uses: actions/cache/restore@v3.3.1
+      with:
+       path: |
+         ~/.rustup/toolchains
+         ~/.rustup/update-hashes
+         ~/.rustup/settings.toml
+       key: toolchain-${{ hashFiles('rust-toolchain') }}-1
+
+    - name: Use rust-toolchain nightly
+      if: steps.rustup-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        rustup toolchain uninstall stable
+        rustup toolchain install $(cat rust-toolchain) \
+          --profile minimal --component clippy,rust-src
+
+    - name: Get rust version
+      id: rustup
+      shell: bash
+      run: |
+        rustup show
+        echo "version=$(rustc --version | cut -d ' ' -f 2)" >> $GITHUB_OUTPUT
+
+    - name: Cache rust-toolchain (save)
+      uses: actions/cache/save@v3.3.1
+      if: steps.rustup-cache.outputs.cache-hit != 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+      with:
+        path: |
+          ~/.rustup/toolchains
+          ~/.rustup/update-hashes
+          ~/.rustup/settings.toml
+        key: ${{ steps.rustup-cache.outputs.cache-primary-key }}
+
+    - name: Cache cargo output (restore)
+      id: cargo-cache
+      uses: actions/cache/restore@v3.3.1
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/.crates.toml
+          ~/.cargo/.crates2.json
+          ~/.cargo/.package-cache
+          ~/.cargo/registry/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-${{ steps.rustup.outputs.version }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ github.job }}-1
