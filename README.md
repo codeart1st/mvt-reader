@@ -1,6 +1,5 @@
 # mvt-reader
 
----
 <div align="center">
   <strong>Mapbox vector tile reader in Rust</strong>
 </div>
