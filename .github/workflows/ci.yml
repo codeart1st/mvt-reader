@@ -74,9 +74,6 @@ jobs:
         id: prepare
         uses: ./.github/actions/prepare-build-env
 
-      - name: Use libegl1-mesa latest
-        uses: ./.github/actions/install-graphics-driver
-
       - name: Run cargo test
         run: |
           cargo test -- --nocapture
