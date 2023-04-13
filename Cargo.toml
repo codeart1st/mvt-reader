@@ -9,12 +9,12 @@ edition = "2021"
 
 [dependencies]
 geo-types = "0.7.9"
-prost = { version = "0.11.8", default-features = false, features = ["prost-derive"] }
+prost = { version = "0.11.9", default-features = false, features = ["prost-derive"] }
 
 [dev-dependencies]
 serde = "1.0.160"
 serde_json = "1.0.95"
-prost = { version = "0.11.8" }
+prost = { version = "0.11.9" }
 
 [build-dependencies]
 prost-build = "0.11.8"
