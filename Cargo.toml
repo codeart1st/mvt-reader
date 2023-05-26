@@ -7,14 +7,24 @@ repository = "https://github.com/codeart1st/mvt-reader"
 license = "MIT"
 edition = "2021"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
 geo-types = "0.7.9"
 prost = { version = "0.11.8", default-features = false, features = ["prost-derive"] }
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.86"
+js-sys = "0.3.63"
+
 [dev-dependencies]
 serde = "1.0.156"
 serde_json = "1.0.94"
-prost = { version = "0.11.8" }
+prost = { version = "0.11.8" } # for testing we need default-features to be enabled
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = "0.3.36"
 
 [build-dependencies]
 prost-build = "0.11.8"

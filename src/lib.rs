@@ -227,3 +227,52 @@ fn parse_geometry(
   }
   Ok(GeometryCollection(geometries))
 }
+
+#[cfg(target_arch = "wasm32")]
+pub mod wasm {
+
+  use wasm_bindgen::prelude::*;
+
+  #[wasm_bindgen]
+  pub struct Reader {
+    reader: Option<super::Reader>,
+  }
+
+  #[wasm_bindgen]
+  impl Reader {
+    #[wasm_bindgen(constructor)]
+    pub fn new(data: Vec<u8>) -> Reader {
+      let reader = match super::Reader::new(data) {
+        Ok(reader) => Some(reader),
+        Err(error) => {
+          // TODO: Handle error to js side
+          println!("{:?}", error);
+          None
+        }
+      };
+      Reader { reader }
+    }
+
+    #[wasm_bindgen(js_name = getLayerNames)]
+    pub fn get_layer_names(&self) -> JsValue {
+      match &self.reader {
+        Some(reader) => {
+          match reader.get_layer_names() {
+            Ok(layer_names) => JsValue::from(
+              layer_names
+                .into_iter()
+                .map(JsValue::from)
+                .collect::<js_sys::Array>(),
+            ),
+            Err(error) => {
+              // TODO: Handle error to js side
+              println!("{:?}", error);
+              JsValue::NULL
+            }
+          }
+        }
+        None => JsValue::NULL,
+      }
+    }
+  }
+}
