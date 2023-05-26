@@ -128,11 +128,14 @@ jobs:
         uses: actions/download-artifact@v3.0.2
         with:
           name: wasm-pack-build
+          path: pkg
 
       - name: Setup node
         uses: actions/setup-node@v3.6.0
         with:
           node-version: 18
 
-      - run: npm ci
-      - run: npm test
+      - name: Run jest test
+        run: |
+          npm ci
+          npm test
