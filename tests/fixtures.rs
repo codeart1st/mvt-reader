@@ -27,7 +27,7 @@ fn read_all_fixtures() -> Result<(), Error> {
             let info_json: TileInfo = serde_json::from_str(info_str.as_str())?;
 
             assert!(!info_json.validity.v1 && !info_json.validity.v2);
-            println!("Failed correctly");
+            println!("Failed correctly: {}", info_json.description);
             continue;
           }
         };
@@ -43,8 +43,31 @@ fn read_all_fixtures() -> Result<(), Error> {
                 let info_json: TileInfo = serde_json::from_str(info_str.as_str())?;
 
                 assert!(!info_json.validity.v1 && !info_json.validity.v2);
-                println!("Failed correctly, because missing layer name");
+                println!(
+                  "Failed correctly, because missing layer name: {}",
+                  info_json.description
+                );
               }
+            }
+          }
+        }
+
+        for (i, _) in layer_names.iter().enumerate() {
+          let features = reader.get_features(i);
+          match features {
+            Ok(features) => {
+              println!("Parsed {} features", features.len());
+            }
+            Err(error) => {
+              let info_str = read_to_string(info_file)?;
+              let info_json: TileInfo = serde_json::from_str(info_str.as_str())?;
+
+              println!("{:?}", error);
+              assert!(!info_json.validity.v1 && !info_json.validity.v2);
+              println!(
+                "Failed correctly, because incorrect features: {}",
+                info_json.description
+              );
             }
           }
         }
@@ -56,7 +79,7 @@ fn read_all_fixtures() -> Result<(), Error> {
         let info_json: TileInfo = serde_json::from_str(info_str.as_str())?;
 
         assert!(!info_json.validity.v1 && !info_json.validity.v2);
-        println!("Failed correctly");
+        println!("Failed correctly: {}", info_json.description);
       }
     }
   }

@@ -16,8 +16,17 @@ fn read_all_fixtures() -> Result<(), Error> {
     let reader_result = Reader::new(bytes.to_vec());
     match reader_result {
       Ok(reader) => {
-        let layer_names_result = reader.get_layer_names();
-        println!("found layer names: {:?}", layer_names_result);
+        let layer_names = match reader.get_layer_names() {
+          Ok(layer_names) => layer_names,
+          Err(error) => {
+            panic!("{}", error);
+          }
+        };
+        for (i, _) in layer_names.iter().enumerate() {
+          let features = reader.get_features(i);
+          assert!(!features.unwrap().is_empty());
+        }
+        println!("found layer names: {:?}", layer_names);
       }
       Err(_) => {
         panic!("Parsing failed unexpectedly")

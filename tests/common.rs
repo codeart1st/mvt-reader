@@ -37,6 +37,7 @@ pub struct Validity {
 
 #[derive(Deserialize)]
 pub struct TileInfo {
+  pub description: String,
   pub validity: Validity,
 }
 

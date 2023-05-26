@@ -1,7 +1,6 @@
+mod error;
 mod feature;
 mod vector_tile;
-
-use core::fmt;
 
 use feature::Feature;
 use geo_types::{Coord, GeometryCollection, LineString, Point, Polygon};
@@ -12,23 +11,6 @@ pub struct Reader {
   tile: Tile,
 }
 
-#[derive(Debug, Clone)]
-pub struct VersionError {
-  layer_name: String,
-
-  version: u32,
-}
-
-impl fmt::Display for VersionError {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(
-      f,
-      "Vector tile version not supported for layer `{}` (found version: {})",
-      self.layer_name, self.version
-    )
-  }
-}
-
 impl Reader {
   pub fn new(data: Vec<u8>) -> Result<Self, DecodeError> {
     Ok(Self {
@@ -36,7 +18,7 @@ impl Reader {
     })
   }
 
-  pub fn get_layer_names(&self) -> Result<Vec<String>, VersionError> {
+  pub fn get_layer_names(&self) -> Result<Vec<String>, error::ParserError> {
     let mut layer_names = Vec::with_capacity(self.tile.layers.len());
     for layer in self.tile.layers.iter() {
       match layer.version {
@@ -44,17 +26,20 @@ impl Reader {
           layer_names.push(layer.name.clone());
         }
         _ => {
-          return Err(VersionError {
-            layer_name: layer.name.clone(),
-            version: layer.version,
-          })
+          return Err(error::ParserError::new(error::VersionError::new(
+            layer.name.clone(),
+            layer.version,
+          )))
         }
       }
     }
     Ok(layer_names)
   }
 
-  pub fn get_features(&self, layer_index: usize) -> Option<Vec<Feature<GeometryCollection<f32>>>> {
+  pub fn get_features(
+    &self,
+    layer_index: usize,
+  ) -> Result<Vec<Feature<GeometryCollection<f32>>>, error::ParserError> {
     let layer = self.tile.layers.get(layer_index);
     match layer {
       Some(layer) => {
@@ -62,16 +47,30 @@ impl Reader {
         for feature in layer.features.iter() {
           if let Some(geom_type) = feature.r#type {
             if let Some(geom_type) = vector_tile::tile::GeomType::from_i32(geom_type) {
+              let parsed_geometries = match parse_geometry(&feature.geometry, geom_type) {
+                Ok(parsed_geometries) => parsed_geometries,
+                Err(error) => {
+                  return Err(error);
+                }
+              };
+
+              let parsed_tags = match parse_tags(&feature.tags, &layer.keys, &layer.values) {
+                Ok(parsed_tags) => parsed_tags,
+                Err(error) => {
+                  return Err(error);
+                }
+              };
+
               features.push(Feature {
-                geometry: parse_geometry(&feature.geometry, geom_type),
-                properties: Some(parse_tags(&feature.tags, &layer.keys, &layer.values)),
+                geometry: parsed_geometries,
+                properties: Some(parsed_tags),
               });
             }
           }
         }
-        Some(features)
+        Ok(features)
       }
-      None => None,
+      None => Ok(vec![]),
     }
   }
 }
@@ -80,16 +79,21 @@ fn parse_tags(
   tags: &[u32],
   keys: &[String],
   values: &[vector_tile::tile::Value],
-) -> std::collections::HashMap<String, String> {
-  tags
-    .chunks(2)
-    .fold(std::collections::HashMap::new(), |mut acc, item| {
-      acc.insert(
-        (*keys.get(item[0] as usize).expect("item not found")).clone(),
-        get_string_value((*values.get(item[1] as usize).expect("item not found")).clone()),
-      );
-      acc
-    })
+) -> Result<std::collections::HashMap<String, String>, error::ParserError> {
+  let mut result = std::collections::HashMap::new();
+  for item in tags.chunks(2) {
+    if item.len() != 2
+      || item[0] > keys.len().try_into().unwrap()
+      || item[1] > values.len().try_into().unwrap()
+    {
+      return Err(error::ParserError::new(error::TagsError::new()));
+    }
+    result.insert(
+      (*keys.get(item[0] as usize).expect("item not found")).clone(),
+      get_string_value((*values.get(item[1] as usize).expect("item not found")).clone()),
+    );
+  }
+  Ok(result)
 }
 
 fn get_string_value(value: vector_tile::tile::Value) -> String {
@@ -131,13 +135,13 @@ fn shoelace_formula(points: &[Point<f32>]) -> f32 {
 fn parse_geometry(
   geometry_data: &[u32],
   _geom_type: vector_tile::tile::GeomType,
-) -> GeometryCollection<f32> {
+) -> Result<GeometryCollection<f32>, error::ParserError> {
   // worst case capacity to prevent reallocation. not needed to be exact.
-  let mut coordinates = Vec::with_capacity(geometry_data.len());
+  let mut coordinates: Vec<Coord<f32>> = Vec::with_capacity(geometry_data.len());
   let mut rings: Vec<LineString<f32>> = Vec::new();
   let mut geometries = Vec::new();
 
-  let mut cursor = [0, 0];
+  let mut cursor: [i32; 2] = [0, 0];
   let mut parameter_count: u32 = 0;
   let mut _id: u8 = 0;
 
@@ -152,7 +156,13 @@ fn parse_geometry(
         }
         7 => {
           // ClosePath
-          coordinates.push(*coordinates.first().expect("invalid geometry"));
+          let first_coordinate = match coordinates.first() {
+            Some(coord) => coord.to_owned(),
+            None => {
+              return Err(error::ParserError::new(error::GeomtryError::new()));
+            }
+          };
+          coordinates.push(first_coordinate);
 
           let ring = LineString(coordinates);
 
@@ -181,9 +191,15 @@ fn parse_geometry(
       let parameter_integer = value;
       let integer_value = ((parameter_integer >> 1) as i32) ^ -((parameter_integer & 1) as i32);
       if parameter_count % 2 == 0 {
-        cursor[0] += integer_value;
+        cursor[0] = match cursor[0].checked_add(integer_value) {
+          Some(result) => result,
+          None => std::i32::MAX, // clip value
+        };
       } else {
-        cursor[1] += integer_value;
+        cursor[1] = match cursor[1].checked_add(integer_value) {
+          Some(result) => result,
+          None => std::i32::MAX, // clip value
+        };
         /*match geom_type {
           vector_tile::tile::GeomType::Polygon => {
             info!("Polygon {} {}", cursor[0], cursor[1]);
@@ -209,5 +225,5 @@ fn parse_geometry(
     // finish last geometry
     geometries.push(Polygon::new(rings[0].clone(), rings[1..].into()).into());
   }
-  GeometryCollection(geometries)
+  Ok(GeometryCollection(geometries))
 }
