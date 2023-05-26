@@ -17,9 +17,8 @@ fn read_all_fixtures() -> Result<(), Error> {
         let tile_json: TileContent = serde_json::from_str(tile_str.as_str())?;
         let layer_names_result = reader.get_layer_names();
 
-        let mut layer_names = vec![];
-        match layer_names_result {
-          Ok(names) => layer_names = names,
+        let layer_names = match layer_names_result {
+          Ok(names) => names,
           Err(error) => {
             println!("{:?}", error);
             let info_str = read_to_string(info_file)?;
