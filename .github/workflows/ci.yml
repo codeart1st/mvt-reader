@@ -134,7 +134,5 @@ jobs:
         with:
           node-version: 18
 
-      - name: Run jest test
-        run: |
-          npm ci
-          npm test
+      - run: npm ci
+      - run: npm test
