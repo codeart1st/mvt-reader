@@ -7,8 +7,19 @@ type Fixture = (PathBuf, PathBuf, PathBuf);
 
 pub fn get_all_fixtures() -> Result<Vec<Fixture>, Error> {
   let mut result = Vec::new();
-  for entry_result in read_dir("mvt-fixtures/fixtures")? {
-    let entry = entry_result?;
+
+  let mut entries: Vec<_> = read_dir("mvt-fixtures/fixtures")?
+    .map(|entry| entry.unwrap())
+    .collect();
+
+  entries.sort_by(|a, b| {
+    let name_a = a.file_name();
+    let name_b = b.file_name();
+
+    name_a.cmp(&name_b)
+  });
+
+  for entry in entries {
     let mvt_file = entry.path().join("tile.mvt");
     let tile_file = entry.path().join("tile.json");
     let info_file = entry.path().join("info.json");

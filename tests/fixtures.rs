@@ -15,7 +15,21 @@ fn read_all_fixtures() -> Result<(), Error> {
       Ok(reader) => {
         let tile_str = read_to_string(tile_file)?;
         let tile_json: TileContent = serde_json::from_str(tile_str.as_str())?;
-        let layer_names = reader.get_layer_names();
+        let layer_names_result = reader.get_layer_names();
+
+        let mut layer_names = vec![];
+        match layer_names_result {
+          Ok(names) => layer_names = names,
+          Err(error) => {
+            println!("{:?}", error);
+            let info_str = read_to_string(info_file)?;
+            let info_json: TileInfo = serde_json::from_str(info_str.as_str())?;
+
+            assert!(!info_json.validity.v1 && !info_json.validity.v2);
+            println!("Failed correctly");
+            continue;
+          }
+        };
 
         if let Some(layers) = tile_json.layers {
           for layer in layers {
@@ -27,7 +41,6 @@ fn read_all_fixtures() -> Result<(), Error> {
                 let info_str = read_to_string(info_file)?;
                 let info_json: TileInfo = serde_json::from_str(info_str.as_str())?;
 
-                // TODO: get_layer_names should fail for this szenario
                 assert!(!info_json.validity.v1 && !info_json.validity.v2);
                 println!("Failed correctly, because missing layer name");
               }
