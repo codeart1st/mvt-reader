@@ -48,7 +48,7 @@ jobs:
             fs.writeFileSync('${{github.workspace}}/wasm-pack-build.zip', Buffer.from(download.data))
 
       - name: Extract build output
-        run: unzip wasm-pack-build.zip
+        run: unzip wasm-pack-build.zip -d pkg
 
       - name: Download wasm-pack build output
         uses: actions/download-artifact@v3.0.2
