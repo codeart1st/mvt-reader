@@ -50,12 +50,6 @@ jobs:
       - name: Extract build output
         run: unzip wasm-pack-build.zip -d pkg
 
-      - name: Download wasm-pack build output
-        uses: actions/download-artifact@v3.0.2
-        with:
-          name: wasm-pack-build
-          path: pkg
-
       - name: Setup node
         uses: actions/setup-node@v3.6.0
         with:
