@@ -1,0 +1,18 @@
+{
+  "private": true,
+  "scripts": {
+    "test": "jest ./tests"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "jest": "29.5.0"
+  },
+  "jest": {
+    "modulePathIgnorePatterns": [
+      "<rootDir>/package.json",
+      "<rootDir>/pkg/package.json"
+    ]
+  }
+}

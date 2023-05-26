@@ -233,6 +233,12 @@ pub mod wasm {
 
   use wasm_bindgen::prelude::*;
 
+  impl From<super::feature::Feature<geo_types::GeometryCollection<f32>>> for wasm_bindgen::JsValue {
+    fn from(_feature: super::feature::Feature<geo_types::GeometryCollection<f32>>) -> Self {
+      JsValue::NULL
+    }
+  }
+
   #[wasm_bindgen]
   pub struct Reader {
     reader: Option<super::Reader>,
@@ -260,6 +266,28 @@ pub mod wasm {
           match reader.get_layer_names() {
             Ok(layer_names) => JsValue::from(
               layer_names
+                .into_iter()
+                .map(JsValue::from)
+                .collect::<js_sys::Array>(),
+            ),
+            Err(error) => {
+              // TODO: Handle error to js side
+              println!("{:?}", error);
+              JsValue::NULL
+            }
+          }
+        }
+        None => JsValue::NULL,
+      }
+    }
+
+    #[wasm_bindgen(js_name = getFeatures)]
+    pub fn get_features(&self, layer_index: usize) -> JsValue {
+      match &self.reader {
+        Some(reader) => {
+          match reader.get_features(layer_index) {
+            Ok(features) => JsValue::from(
+              features
                 .into_iter()
                 .map(JsValue::from)
                 .collect::<js_sys::Array>(),

@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "A library for decoding and reading mapbox vector tiles in Rust"
 authors = ["Paul Lange <paul.lange@data-experts.de>"]
 repository = "https://github.com/codeart1st/mvt-reader"
+keywords = ["rust", "webassembly", "wasm", "mapbox", "pbf", "mapbox-vector-tiles", "mvt"]
 license = "MIT"
 edition = "2021"
 
@@ -22,9 +23,6 @@ js-sys = "0.3.63"
 serde = "1.0.156"
 serde_json = "1.0.94"
 prost = { version = "0.11.8" } # for testing we need default-features to be enabled
-
-[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
-wasm-bindgen-test = "0.3.36"
 
 [build-dependencies]
 prost-build = "0.11.8"

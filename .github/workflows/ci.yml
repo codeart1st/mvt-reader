@@ -38,7 +38,7 @@ jobs:
           cargo-cache-primary-key: ${{ steps.prepare.outputs.cargo-cache-primary-key }}
           cargo-cache-hit: ${{ steps.prepare.outputs.cargo-cache-hit }}
 
-  build:
+  build_native:
     timeout-minutes: 10
     runs-on: ubuntu-22.04
     steps:
@@ -61,7 +61,38 @@ jobs:
           cargo-cache-primary-key: ${{ steps.prepare.outputs.cargo-cache-primary-key }}
           cargo-cache-hit: ${{ steps.prepare.outputs.cargo-cache-hit }}
 
-  unit-test:
+  build_wasm:
+    timeout-minutes: 10
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v3.4.0
+        with:
+          submodules: recursive
+
+      - name: Prepare build environemnt
+        id: prepare
+        uses: ./.github/actions/prepare-build-env
+
+      - name: Run wasm-pack build
+        run: |
+          wasm-pack build --release --target web
+          wasm-pack build --release --target nodejs -d pkg/node
+
+      - name: Upload wasm-pack build output
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: wasm-pack-build
+          path: pkg
+
+      - name: Post build environemnt
+        if: always()
+        uses: ./.github/actions/post-build-env
+        with:
+          cargo-cache-primary-key: ${{ steps.prepare.outputs.cargo-cache-primary-key }}
+          cargo-cache-hit: ${{ steps.prepare.outputs.cargo-cache-hit }}
+
+  test_native:
     timeout-minutes: 10
     runs-on: ubuntu-22.04
     steps:
@@ -84,3 +115,26 @@ jobs:
         with:
           cargo-cache-primary-key: ${{ steps.prepare.outputs.cargo-cache-primary-key }}
           cargo-cache-hit: ${{ steps.prepare.outputs.cargo-cache-hit }}
+
+  test_wasm:
+    needs: build_wasm
+    timeout-minutes: 10
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v3.4.0
+
+      - name: Download wasm-pack build output
+        uses: actions/download-artifact@v3.1.2
+        with:
+          name: wasm-pack-build
+
+      - name: Setup node
+        uses: actions/setup-node@v3.6.0
+        with:
+          node-version: 18
+
+      - name: Run jest test
+        run: |
+          npm ci
+          npm test

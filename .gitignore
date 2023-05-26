@@ -1,4 +1,5 @@
 /.vscode
 /target
 /pkg
+/node_modules
 **/*.rs.bk
