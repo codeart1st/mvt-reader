@@ -135,7 +135,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v3.6.0
         with:
-          node-version: 18
+          node-version: "lts/*"
 
       - name: Run jest test
         run: |

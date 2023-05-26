@@ -19,11 +19,12 @@
 # Build the project
 
 ```sh
-cargo build
+cargo build --release
 ```
 
 # Run tests
 
 ```sh
 cargo test
+wasm-pack build --release --target nodejs -d pkg/node && npm test
 ```
