@@ -1,9 +1,11 @@
 mod common;
 
 use common::{get_all_fixtures, TileContent, TileInfo};
-use mvt_reader::Reader;
+
 use std::fs::{read, read_to_string};
 use std::{io::Error, result::Result};
+
+use mvt_reader::Reader;
 
 #[test]
 fn read_all_fixtures() -> Result<(), Error> {
