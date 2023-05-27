@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   ci-workflow:
-    uses: ./.github/workflows/ci.yml@main
+    uses: ./.github/workflows/ci.yml
 
   publish:
     timeout-minutes: 10
