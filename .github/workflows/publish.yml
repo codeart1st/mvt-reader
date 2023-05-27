@@ -11,10 +11,11 @@ permissions:
   contents: read
 
 jobs:
-  ci-workflow:
+  ci:
     uses: ./.github/workflows/ci.yml
 
   publish:
+    needs: test_wasm
     timeout-minutes: 10
     runs-on: ubuntu-22.04
     permissions:
