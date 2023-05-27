@@ -1,6 +1,6 @@
 [package]
 name = "mvt-reader"
-version = "0.1.0"
+version = "1.0.0-alpha.2"
 description = "A library for decoding and reading mapbox vector tiles in Rust"
 authors = ["Paul Lange <paul.lange@data-experts.de>"]
 repository = "https://github.com/codeart1st/mvt-reader"
