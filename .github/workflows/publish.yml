@@ -27,6 +27,9 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Prepare build environemnt
+        uses: ./.github/actions/prepare-build-env
+
       - name: Download wasm-pack build output
         uses: actions/download-artifact@v3.0.2
         with:

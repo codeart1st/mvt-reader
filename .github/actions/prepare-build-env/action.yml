@@ -30,7 +30,7 @@ runs:
          ~/.rustup/settings.toml
        key: toolchain-${{ hashFiles('rust-toolchain') }}-1
 
-    - name: Use rust-toolchain nightly
+    - name: Use rust-toolchain
       if: steps.rustup-cache.outputs.cache-hit != 'true'
       shell: bash
       run: |
