@@ -51,7 +51,7 @@ impl std::fmt::Display for VersionError {
 
 impl std::error::Error for VersionError {}
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct TagsError;
 
 impl TagsError {
@@ -68,7 +68,7 @@ impl std::fmt::Display for TagsError {
 
 impl std::error::Error for TagsError {}
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct GeomtryError;
 
 impl GeomtryError {

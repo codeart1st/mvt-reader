@@ -1,5 +1,6 @@
-mod error;
-mod feature;
+pub mod error;
+pub mod feature;
+
 mod vector_tile;
 
 use feature::Feature;
