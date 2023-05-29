@@ -6,7 +6,9 @@ mod vector_tile;
 use feature::Feature;
 use geo_types::{Coord, GeometryCollection, LineString, Point, Polygon};
 use prost::{bytes::Bytes, DecodeError, Message};
-use vector_tile::Tile;
+use vector_tile::{tile::GeomType, Tile};
+
+const DIMENSION: u32 = 2;
 
 pub struct Reader {
   tile: Tile,
@@ -47,7 +49,7 @@ impl Reader {
         let mut features = Vec::with_capacity(layer.features.len());
         for feature in layer.features.iter() {
           if let Some(geom_type) = feature.r#type {
-            if let Some(geom_type) = vector_tile::tile::GeomType::from_i32(geom_type) {
+            if let Some(geom_type) = GeomType::from_i32(geom_type) {
               let parsed_geometries = match parse_geometry(&feature.geometry, geom_type) {
                 Ok(parsed_geometries) => parsed_geometries,
                 Err(error) => {
@@ -135,8 +137,12 @@ fn shoelace_formula(points: &[Point<f32>]) -> f32 {
 
 fn parse_geometry(
   geometry_data: &[u32],
-  _geom_type: vector_tile::tile::GeomType,
+  geom_type: GeomType,
 ) -> Result<GeometryCollection<f32>, error::ParserError> {
+  if geom_type == GeomType::Unknown {
+    return Ok(GeometryCollection(vec![]));
+  }
+
   // worst case capacity to prevent reallocation. not needed to be exact.
   let mut coordinates: Vec<Coord<f32>> = Vec::with_capacity(geometry_data.len());
   let mut rings: Vec<LineString<f32>> = Vec::new();
@@ -153,7 +159,7 @@ fn parse_geometry(
       match _id {
         1 | 2 => {
           // MoveTo | LineTo
-          parameter_count = (command_integer >> 3) * 2; // 2-dimensional
+          parameter_count = (command_integer >> 3) * DIMENSION;
         }
         7 => {
           // ClosePath
@@ -168,20 +174,16 @@ fn parse_geometry(
           let ring = LineString(coordinates);
 
           let area = shoelace_formula(&ring.clone().into_points());
-          //info!("ClosePath with area: {} and coordinates {:?}", area, &ring);
 
           if area > 0.0 {
             // exterior ring
-            //info!("exterior");
             if !rings.is_empty() {
               // finish previous geometry
               geometries.push(Polygon::new(rings[0].clone(), rings[1..].into()).into());
               rings = Vec::new();
             }
-          } else {
-            // interior ring
-            //info!("interior");
           }
+
           rings.push(ring);
           // start a new sequence
           coordinates = Vec::new();
@@ -191,7 +193,7 @@ fn parse_geometry(
     } else {
       let parameter_integer = value;
       let integer_value = ((parameter_integer >> 1) as i32) ^ -((parameter_integer & 1) as i32);
-      if parameter_count % 2 == 0 {
+      if parameter_count % DIMENSION == 0 {
         cursor[0] = match cursor[0].checked_add(integer_value) {
           Some(result) => result,
           None => std::i32::MAX, // clip value
@@ -201,18 +203,6 @@ fn parse_geometry(
           Some(result) => result,
           None => std::i32::MAX, // clip value
         };
-        /*match geom_type {
-          vector_tile::tile::GeomType::Polygon => {
-            info!("Polygon {} {}", cursor[0], cursor[1]);
-          }
-          vector_tile::tile::GeomType::Point => {
-            info!("Point");
-          }
-          vector_tile::tile::GeomType::Linestring => {
-            info!("Linestring");
-          }
-          _ => (),
-        }*/
         coordinates.push(Coord {
           x: cursor[0] as f32,
           y: cursor[1] as f32,
@@ -225,6 +215,10 @@ fn parse_geometry(
   if !rings.is_empty() {
     // finish last geometry
     geometries.push(Polygon::new(rings[0].clone(), rings[1..].into()).into());
+  } else if geom_type == GeomType::Point {
+    for coord in coordinates.iter() {
+      geometries.push(Point::new(coord.x, coord.y).into());
+    }
   }
   Ok(GeometryCollection(geometries))
 }
@@ -236,7 +230,7 @@ pub mod wasm {
 
   impl From<super::feature::Feature<geo_types::GeometryCollection<f32>>> for wasm_bindgen::JsValue {
     fn from(_feature: super::feature::Feature<geo_types::GeometryCollection<f32>>) -> Self {
-      JsValue::NULL
+      JsValue::NULL // TODO: convert to GeoJSON structure
     }
   }
 
