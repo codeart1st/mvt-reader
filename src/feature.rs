@@ -1,13 +1,15 @@
 use std::collections::HashMap;
 
-pub struct Feature<T> {
-  pub geometry: T,
+use geo_types::Geometry;
+
+pub struct Feature {
+  pub geometry: Geometry<f32>,
 
   pub properties: Option<HashMap<String, String>>,
 }
 
-impl<T> Feature<T> {
-  pub fn get_geometry(&self) -> &T {
+impl Feature {
+  pub fn get_geometry(&self) -> &Geometry<f32> {
     &self.geometry
   }
 }

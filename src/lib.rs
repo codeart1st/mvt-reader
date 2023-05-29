@@ -4,7 +4,9 @@ pub mod feature;
 mod vector_tile;
 
 use feature::Feature;
-use geo_types::{Coord, GeometryCollection, LineString, Point, Polygon};
+use geo_types::{
+  Coord, Geometry, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
+};
 use prost::{bytes::Bytes, DecodeError, Message};
 use vector_tile::{tile::GeomType, Tile};
 
@@ -39,10 +41,7 @@ impl Reader {
     Ok(layer_names)
   }
 
-  pub fn get_features(
-    &self,
-    layer_index: usize,
-  ) -> Result<Vec<Feature<GeometryCollection<f32>>>, error::ParserError> {
+  pub fn get_features(&self, layer_index: usize) -> Result<Vec<Feature>, error::ParserError> {
     let layer = self.tile.layers.get(layer_index);
     match layer {
       Some(layer) => {
@@ -50,8 +49,8 @@ impl Reader {
         for feature in layer.features.iter() {
           if let Some(geom_type) = feature.r#type {
             if let Some(geom_type) = GeomType::from_i32(geom_type) {
-              let parsed_geometries = match parse_geometry(&feature.geometry, geom_type) {
-                Ok(parsed_geometries) => parsed_geometries,
+              let parsed_geometry = match parse_geometry(&feature.geometry, geom_type) {
+                Ok(parsed_geometry) => parsed_geometry,
                 Err(error) => {
                   return Err(error);
                 }
@@ -65,7 +64,7 @@ impl Reader {
               };
 
               features.push(Feature {
-                geometry: parsed_geometries,
+                geometry: parsed_geometry,
                 properties: Some(parsed_tags),
               });
             }
@@ -138,15 +137,15 @@ fn shoelace_formula(points: &[Point<f32>]) -> f32 {
 fn parse_geometry(
   geometry_data: &[u32],
   geom_type: GeomType,
-) -> Result<GeometryCollection<f32>, error::ParserError> {
+) -> Result<Geometry<f32>, error::ParserError> {
   if geom_type == GeomType::Unknown {
-    return Ok(GeometryCollection(vec![]));
+    return Err(error::ParserError::new(error::GeomtryError::new()));
   }
 
   // worst case capacity to prevent reallocation. not needed to be exact.
   let mut coordinates: Vec<Coord<f32>> = Vec::with_capacity(geometry_data.len());
-  let mut rings: Vec<LineString<f32>> = Vec::new();
-  let mut geometries = Vec::new();
+  let mut polygons: Vec<Polygon<f32>> = Vec::new();
+  let mut linestrings: Vec<LineString<f32>> = Vec::new();
 
   let mut cursor: [i32; 2] = [0, 0];
   let mut parameter_count: u32 = 0;
@@ -160,9 +159,9 @@ fn parse_geometry(
           // MoveTo
           parameter_count = (command_integer >> 3) * DIMENSION;
           if geom_type == GeomType::Linestring && !coordinates.is_empty() {
-            geometries.push(LineString::new(coordinates).into());
+            linestrings.push(LineString::new(coordinates));
             // start with a new linestring
-            coordinates = Vec::new();
+            coordinates = Vec::with_capacity(geometry_data.len());
           }
         }
         2 => {
@@ -179,22 +178,25 @@ fn parse_geometry(
           };
           coordinates.push(first_coordinate);
 
-          let ring = LineString(coordinates);
+          let ring = LineString::new(coordinates);
 
           let area = shoelace_formula(&ring.clone().into_points());
 
           if area > 0.0 {
             // exterior ring
-            if !rings.is_empty() {
+            if !linestrings.is_empty() {
               // finish previous geometry
-              geometries.push(Polygon::new(rings[0].clone(), rings[1..].into()).into());
-              rings = Vec::new();
+              polygons.push(Polygon::new(
+                linestrings[0].clone(),
+                linestrings[1..].into(),
+              ));
+              linestrings = Vec::new();
             }
           }
 
-          rings.push(ring);
+          linestrings.push(ring);
           // start a new sequence
-          coordinates = Vec::new();
+          coordinates = Vec::with_capacity(geometry_data.len());
         }
         _ => (),
       }
@@ -222,24 +224,38 @@ fn parse_geometry(
 
   match geom_type {
     GeomType::Linestring => {
-      geometries.push(LineString::new(coordinates).into());
-    }
-    GeomType::Point => {
-      for coord in coordinates.iter() {
-        geometries.push(Point::new(coord.x, coord.y).into());
+      // the last linestring is in coordinates vec
+      if !linestrings.is_empty() {
+        linestrings.push(LineString::new(coordinates));
+        return Ok(MultiLineString::new(linestrings).into());
       }
+      Ok(LineString::new(coordinates).into())
     }
+    GeomType::Point => Ok(
+      MultiPoint(
+        coordinates
+          .iter()
+          .map(|coord| Point::new(coord.x, coord.y))
+          .collect(),
+      )
+      .into(),
+    ),
     GeomType::Polygon => {
-      if !rings.is_empty() {
+      if !linestrings.is_empty() {
+        // TODO: is this if check really needed? can this be simplified as for linestrings?
         // finish last geometry
-        geometries.push(Polygon::new(rings[0].clone(), rings[1..].into()).into());
+        polygons.push(Polygon::new(
+          linestrings[0].clone(),
+          linestrings[1..].into(),
+        ));
       }
+      if polygons.len() > 1 {
+        return Ok(MultiPolygon::new(polygons).into());
+      }
+      Ok(polygons.get(0).unwrap().to_owned().into())
     }
-    GeomType::Unknown => {
-      // not supported
-    }
+    GeomType::Unknown => Err(error::ParserError::new(error::GeomtryError::new())),
   }
-  Ok(GeometryCollection(geometries)) // TODO: Return Geometry and use MultiPolgyon, MultiPoint and MultiLineString
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -247,8 +263,8 @@ pub mod wasm {
 
   use wasm_bindgen::prelude::*;
 
-  impl From<super::feature::Feature<geo_types::GeometryCollection<f32>>> for wasm_bindgen::JsValue {
-    fn from(_feature: super::feature::Feature<geo_types::GeometryCollection<f32>>) -> Self {
+  impl From<super::feature::Feature> for wasm_bindgen::JsValue {
+    fn from(_feature: super::feature::Feature) -> Self {
       JsValue::NULL // TODO: convert to GeoJSON structure
     }
   }
