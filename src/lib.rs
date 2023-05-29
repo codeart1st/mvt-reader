@@ -150,15 +150,23 @@ fn parse_geometry(
 
   let mut cursor: [i32; 2] = [0, 0];
   let mut parameter_count: u32 = 0;
-  let mut _id: u8 = 0;
 
   for (_, value) in geometry_data.iter().enumerate() {
     if parameter_count == 0 {
       let command_integer = value;
-      _id = (command_integer & 0x7) as u8;
-      match _id {
-        1 | 2 => {
-          // MoveTo | LineTo
+      let id = (command_integer & 0x7) as u8;
+      match id {
+        1 => {
+          // MoveTo
+          parameter_count = (command_integer >> 3) * DIMENSION;
+          if geom_type == GeomType::Linestring && !coordinates.is_empty() {
+            geometries.push(LineString::new(coordinates).into());
+            // start with a new linestring
+            coordinates = Vec::new();
+          }
+        }
+        2 => {
+          // LineTo
           parameter_count = (command_integer >> 3) * DIMENSION;
         }
         7 => {
@@ -212,15 +220,26 @@ fn parse_geometry(
     }
   }
 
-  if !rings.is_empty() {
-    // finish last geometry
-    geometries.push(Polygon::new(rings[0].clone(), rings[1..].into()).into());
-  } else if geom_type == GeomType::Point {
-    for coord in coordinates.iter() {
-      geometries.push(Point::new(coord.x, coord.y).into());
+  match geom_type {
+    GeomType::Linestring => {
+      geometries.push(LineString::new(coordinates).into());
+    }
+    GeomType::Point => {
+      for coord in coordinates.iter() {
+        geometries.push(Point::new(coord.x, coord.y).into());
+      }
+    }
+    GeomType::Polygon => {
+      if !rings.is_empty() {
+        // finish last geometry
+        geometries.push(Polygon::new(rings[0].clone(), rings[1..].into()).into());
+      }
+    }
+    GeomType::Unknown => {
+      // not supported
     }
   }
-  Ok(GeometryCollection(geometries))
+  Ok(GeometryCollection(geometries)) // TODO: Return Geometry and use MultiPolgyon, MultiPoint and MultiLineString
 }
 
 #[cfg(target_arch = "wasm32")]
