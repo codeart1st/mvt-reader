@@ -35,8 +35,7 @@ runs:
       shell: bash
       run: |
         rustup toolchain uninstall stable
-        rustup toolchain install $(cat rust-toolchain) \
-          --profile minimal --component clippy,rust-src
+        rustup show # force install of rust-toolchain TOML
 
     - name: Get rust version
       id: rustup
