@@ -10,19 +10,60 @@ use geo_types::{
 use prost::{bytes::Bytes, DecodeError, Message};
 use vector_tile::{tile::GeomType, Tile};
 
+/// The dimension used for the vector tile.
 const DIMENSION: u32 = 2;
 
+/// Reader for decoding and accessing vector tile data.
 pub struct Reader {
   tile: Tile,
 }
 
 impl Reader {
+  /// Creates a new `Reader` instance with the provided vector tile data.
+  ///
+  /// # Arguments
+  ///
+  /// * `data` - The vector tile data as a byte vector.
+  ///
+  /// # Returns
+  ///
+  /// A result containing the `Reader` instance if successful, or a `DecodeError` if decoding the vector tile data fails.
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// let data = vec![/* Vector tile data */];
+  /// let reader = Reader::new(data);
+  /// ```
   pub fn new(data: Vec<u8>) -> Result<Self, DecodeError> {
     Ok(Self {
       tile: Tile::decode(Bytes::from(data))?,
     })
   }
 
+  /// Retrieves the names of the layers in the vector tile.
+  ///
+  /// # Returns
+  ///
+  /// A result containing a vector of layer names if successful, or a `ParserError` if there is an error parsing the tile.
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// let data = vec![/* Vector tile data */];
+  /// let reader = Reader::new(data).unwrap();
+  ///
+  /// match reader.get_layer_names() {
+  ///     Ok(layer_names) => {
+  ///         for name in layer_names {
+  ///             println!("{}", name);
+  ///         }
+  ///     }
+  ///     Err(error) => {
+  ///         eprintln!("Error: {}", error);
+  ///     }
+  /// }
+  /// ```
   pub fn get_layer_names(&self) -> Result<Vec<String>, error::ParserError> {
     let mut layer_names = Vec::with_capacity(self.tile.layers.len());
     for layer in self.tile.layers.iter() {
@@ -41,6 +82,33 @@ impl Reader {
     Ok(layer_names)
   }
 
+  /// Retrieves the features of a specific layer in the vector tile.
+  ///
+  /// # Arguments
+  ///
+  /// * `layer_index` - The index of the layer.
+  ///
+  /// # Returns
+  ///
+  /// A result containing a vector of features if successful, or a `ParserError` if there is an error parsing the tile or accessing the layer.
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// let data = vec![/* Vector tile data */];
+  /// let reader = Reader::new(data).unwrap();
+  ///
+  /// match reader.get_features(0) {
+  ///     Ok(features) => {
+  ///         for feature in features {
+  ///             println!("{:?}", feature);
+  ///         }
+  ///     }
+  ///     Err(error) => {
+  ///         eprintln!("Error: {}", error);
+  ///     }
+  /// }
+  /// ```
   pub fn get_features(&self, layer_index: usize) -> Result<Vec<Feature>, error::ParserError> {
     let layer = self.tile.layers.get(layer_index);
     match layer {
@@ -263,6 +331,7 @@ pub mod wasm {
   use serde_wasm_bindgen::Serializer;
   use wasm_bindgen::prelude::*;
 
+  /// Converts a `super::feature::Feature` into a `wasm_bindgen::JsValue`.
   impl From<super::feature::Feature> for wasm_bindgen::JsValue {
     fn from(feature: super::feature::Feature) -> Self {
       let properties: Option<JsonObject> = feature.properties.as_ref().map(|props| {
@@ -285,6 +354,7 @@ pub mod wasm {
     }
   }
 
+  /// Reader for decoding and accessing vector tile data in WebAssembly.
   #[wasm_bindgen]
   pub struct Reader {
     reader: Option<super::Reader>,
@@ -292,6 +362,19 @@ pub mod wasm {
 
   #[wasm_bindgen]
   impl Reader {
+    /// Creates a new `Reader` instance with the provided vector tile data.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - The vector tile data as a `Vec<u8>`.
+    /// * `error_callback` - An optional JavaScript callback function to handle errors. It should accept a single parameter which will contain the error message as a string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let tileData = getVectorTileData();
+    /// let reader = new Reader(tileData, handleErrors);
+    /// ```
     #[wasm_bindgen(constructor)]
     pub fn new(data: Vec<u8>, error_callback: Option<js_sys::Function>) -> Reader {
       let reader = match super::Reader::new(data) {
@@ -308,6 +391,24 @@ pub mod wasm {
       Reader { reader }
     }
 
+    /// Retrieves the layer names present in the vector tile.
+    ///
+    /// # Arguments
+    ///
+    /// * `error_callback` - An optional JavaScript callback function to handle errors. It should accept a single parameter which will contain the error message as a string.
+    ///
+    /// # Returns
+    ///
+    /// A JavaScript array containing the layer names as strings.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let layerNames = reader.getLayerNames(handleErrors);
+    /// for (let i = 0; i < layerNames.length; i++) {
+    ///   console.log(layerNames[i]);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = getLayerNames)]
     pub fn get_layer_names(&self, error_callback: Option<js_sys::Function>) -> JsValue {
       match &self.reader {
@@ -331,6 +432,25 @@ pub mod wasm {
       }
     }
 
+    /// Retrieves the features of a specific layer in the vector tile.
+    ///
+    /// # Arguments
+    ///
+    /// * `layer_index` - The index of the layer to retrieve features from.
+    /// * `error_callback` - An optional JavaScript callback function to handle errors. It should accept a single parameter which will contain the error message as a string.
+    ///
+    /// # Returns
+    ///
+    /// A JavaScript array containing the features as GeoJSON objects.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let features = reader.getFeatures(0, handleErrors);
+    /// for (let i = 0; i < features.length; i++) {
+    ///   console.log(features[i]);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = getFeatures)]
     pub fn get_features(
       &self,
