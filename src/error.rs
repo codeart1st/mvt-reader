@@ -1,3 +1,18 @@
+//! This module provides error types and utilities for the `mvt-reader` crate.
+//!
+//! # Errors
+//!
+//! The `error` module defines the following error types:
+//!
+//! - `ParserError`: Represents an error that occurs during parsing of a vector tile.
+//! - `GeometryError`: Represents an error related to the geometry of a feature in a vector tile.
+//! - `TagsError`: Represents an error related to the tags of a feature in a vector tile.
+//! - `VersionError`: Represents an error related to the version of a vector tile.
+//!
+//! # Utilities
+//!
+//! The `error` module also provides utility functions and traits for working with errors, such as formatting and error chaining.
+
 /// A structure representing a parser error.
 #[derive(Debug)]
 pub struct ParserError {

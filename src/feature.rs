@@ -1,3 +1,13 @@
+//! This module provides types and utilities for working with features in the `mvt-reader` crate.
+//!
+//! A feature represents a geographic entity with geometry and associated properties. Features are typically found within layers of a vector tile.
+//!
+//! # Types
+//!
+//! The `feature` module defines the following types:
+//!
+//! - `Feature`: Represents a feature with geometry and properties.
+
 use std::collections::HashMap;
 
 use geo_types::Geometry;

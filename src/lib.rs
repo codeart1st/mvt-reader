@@ -1,3 +1,63 @@
+//! # mvt-reader
+//!
+//! `mvt-reader` is a Rust library for decoding and reading Mapbox vector tiles.
+//!
+//! It provides the `Reader` struct, which allows you to read vector tiles and access their layers and features.
+//!
+//! # Usage
+//!
+//! To use the `mvt-reader` library in your Rust project, add the following to your `Cargo.toml` file:
+//!
+//! ```toml
+//! [dependencies]
+//! mvt-reader = "1.0.0"
+//! ```
+//!
+//! Then, you can import and use the library in your code:
+//!
+//! ```rust
+//! use mvt_reader::{Reader, ParserError};
+//!
+//! fn main() -> Result<(), ParserError> {
+//!   // Read a vector tile from file or data
+//!   let data = vec![/* Vector tile data */];
+//!   let reader = Reader::new(data)?;
+//!
+//!   // Get layer names
+//!   let layer_names = reader.get_layer_names()?;
+//!   for name in layer_names {
+//!     println!("Layer: {}", name);
+//!   }
+//!
+//!   // Get features for a specific layer
+//!   let layer_index = 0;
+//!   let features = reader.get_features(layer_index)?;
+//!   for feature in features {
+//!     println!("Feature: {:?}", feature);
+//!   }
+//!
+//!   Ok(())
+//! }
+//! ```
+//!
+//! # Features
+//!
+//! The `mvt-reader` library provides the following features:
+//!
+//! - `wasm`: Enables the compilation of the library as a WebAssembly module, allowing usage in JavaScript/TypeScript projects.
+//!
+//! To enable the `wasm` feature, add the following to your `Cargo.toml` file:
+//!
+//! ```toml
+//! [dependencies.mvt-reader]
+//! version = "1.0.0"
+//! features = ["wasm"]
+//! ```
+//!
+//! # License
+//!
+//! This project is licensed under the [MIT License](https://github.com/codeart1st/mvt-reader/blob/main/LICENSE).
+
 pub mod error;
 pub mod feature;
 
@@ -378,8 +438,6 @@ pub mod wasm {
     /// # Examples
     ///
     /// ```
-    /// use mvt_reader::Reader;
-    ///
     /// let tileData = getVectorTileData();
     /// let reader = new Reader(tileData, handleErrors);
     /// ```
