@@ -75,13 +75,13 @@ fn main() -> Result<(), ParserError> {
 To use the mvt-reader library as a WebAssembly module in JavaScript, you can install it with npm and use it in your JavaScript code:
 
 ```js
-const { Reader } = require('mvt-reader');
-const fs = require('fs');
+const { Reader } = require('mvt-reader')
+const fs = require('fs')
 
 // Example usage
-const reader = new Reader(fs.readFileSync('path/to/tile.mvt'));
-const layerNames = reader.getLayerNames();
-console.log(layerNames);
+const reader = new Reader(fs.readFileSync('path/to/tile.mvt'))
+const layerNames = reader.getLayerNames()
+console.log(layerNames)
 
 // More code...
 ```
