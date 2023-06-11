@@ -84,7 +84,7 @@ fn read_all_fixtures() -> Result<(), Error> {
         let info_json: TileInfo = serde_json::from_str(info_str.as_str())?;
 
         assert!(!info_json.validity.v1 && !info_json.validity.v2);
-        println!("Failed correctly: {}", info_json.description);
+        println!("Failed asdf correctly: {}", info_json.description);
       }
     }
   }

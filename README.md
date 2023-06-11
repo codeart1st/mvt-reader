@@ -26,5 +26,5 @@ cargo build --release
 
 ```sh
 cargo test
-wasm-pack build --release --target nodejs -d pkg/node && npm test
+wasm-pack build --release --target nodejs -d pkg/node -- --features wasm && npm test
 ```

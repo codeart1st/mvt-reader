@@ -242,14 +242,11 @@ fn parse_geometry(
     ),
     GeomType::Polygon => {
       if !linestrings.is_empty() {
-        // TODO: is this if check really needed? can this be simplified as for linestrings?
-        // finish last geometry
+        // finish pending polygon
         polygons.push(Polygon::new(
           linestrings[0].clone(),
           linestrings[1..].into(),
         ));
-      }
-      if polygons.len() > 1 {
         return Ok(MultiPolygon::new(polygons).into());
       }
       Ok(polygons.get(0).unwrap().to_owned().into())
@@ -258,14 +255,33 @@ fn parse_geometry(
   }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(feature = "wasm")]
 pub mod wasm {
 
+  use geojson::{Feature, GeoJson, JsonObject};
+  use serde::Serialize;
+  use serde_wasm_bindgen::Serializer;
   use wasm_bindgen::prelude::*;
 
   impl From<super::feature::Feature> for wasm_bindgen::JsValue {
-    fn from(_feature: super::feature::Feature) -> Self {
-      JsValue::NULL // TODO: convert to GeoJSON structure
+    fn from(feature: super::feature::Feature) -> Self {
+      let properties: Option<JsonObject> = feature.properties.as_ref().map(|props| {
+        props
+          .clone()
+          .into_iter()
+          .map(|(k, v)| (k, v.into()))
+          .collect()
+      });
+
+      let geojson = GeoJson::Feature(Feature {
+        bbox: None,
+        geometry: Some(feature.get_geometry().into()),
+        id: None,
+        properties,
+        foreign_members: None,
+      });
+
+      geojson.serialize(&Serializer::json_compatible()).unwrap()
     }
   }
 
@@ -277,12 +293,15 @@ pub mod wasm {
   #[wasm_bindgen]
   impl Reader {
     #[wasm_bindgen(constructor)]
-    pub fn new(data: Vec<u8>) -> Reader {
+    pub fn new(data: Vec<u8>, error_callback: Option<js_sys::Function>) -> Reader {
       let reader = match super::Reader::new(data) {
         Ok(reader) => Some(reader),
         Err(error) => {
-          // TODO: Handle error to js side
-          println!("{:?}", error);
+          if let Some(callback) = error_callback {
+            callback
+              .call1(&JsValue::NULL, &JsValue::from_str(&format!("{:?}", error)))
+              .unwrap();
+          }
           None
         }
       };
@@ -290,45 +309,51 @@ pub mod wasm {
     }
 
     #[wasm_bindgen(js_name = getLayerNames)]
-    pub fn get_layer_names(&self) -> JsValue {
+    pub fn get_layer_names(&self, error_callback: Option<js_sys::Function>) -> JsValue {
       match &self.reader {
-        Some(reader) => {
-          match reader.get_layer_names() {
-            Ok(layer_names) => JsValue::from(
-              layer_names
-                .into_iter()
-                .map(JsValue::from)
-                .collect::<js_sys::Array>(),
-            ),
-            Err(error) => {
-              // TODO: Handle error to js side
-              println!("{:?}", error);
-              JsValue::NULL
+        Some(reader) => match reader.get_layer_names() {
+          Ok(layer_names) => JsValue::from(
+            layer_names
+              .into_iter()
+              .map(JsValue::from)
+              .collect::<js_sys::Array>(),
+          ),
+          Err(error) => {
+            if let Some(callback) = error_callback {
+              callback
+                .call1(&JsValue::NULL, &JsValue::from_str(&format!("{:?}", error)))
+                .unwrap();
             }
+            JsValue::NULL
           }
-        }
+        },
         None => JsValue::NULL,
       }
     }
 
     #[wasm_bindgen(js_name = getFeatures)]
-    pub fn get_features(&self, layer_index: usize) -> JsValue {
+    pub fn get_features(
+      &self,
+      layer_index: usize,
+      error_callback: Option<js_sys::Function>,
+    ) -> JsValue {
       match &self.reader {
-        Some(reader) => {
-          match reader.get_features(layer_index) {
-            Ok(features) => JsValue::from(
-              features
-                .into_iter()
-                .map(JsValue::from)
-                .collect::<js_sys::Array>(),
-            ),
-            Err(error) => {
-              // TODO: Handle error to js side
-              println!("{:?}", error);
-              JsValue::NULL
+        Some(reader) => match reader.get_features(layer_index) {
+          Ok(features) => JsValue::from(
+            features
+              .into_iter()
+              .map(JsValue::from)
+              .collect::<js_sys::Array>(),
+          ),
+          Err(error) => {
+            if let Some(callback) = error_callback {
+              callback
+                .call1(&JsValue::NULL, &JsValue::from_str(&format!("{:?}", error)))
+                .unwrap();
             }
+            JsValue::NULL
           }
-        }
+        },
         None => JsValue::NULL,
       }
     }
