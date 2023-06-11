@@ -14,6 +14,8 @@ impl ParserError {
   /// # Examples
   ///
   /// ```
+  /// use mvt_reader::error::ParserError;
+  ///
   /// let source_error = std::io::Error::new(std::io::ErrorKind::Other, "Custom error");
   /// let parser_error = ParserError::new(source_error);
   /// ```
@@ -35,6 +37,7 @@ impl std::fmt::Display for ParserError {
   ///
   /// ```
   /// use std::error::Error;
+  /// use mvt_reader::error::ParserError;
   ///
   /// let source_error = std::io::Error::new(std::io::ErrorKind::Other, "Custom error");
   /// let parser_error = ParserError::new(source_error);
@@ -52,6 +55,7 @@ impl std::error::Error for ParserError {
   ///
   /// ```
   /// use std::error::Error;
+  /// use mvt_reader::error::ParserError;
   ///
   /// let source_error = std::io::Error::new(std::io::ErrorKind::Other, "Custom error");
   /// let parser_error = ParserError::new(source_error);
@@ -82,6 +86,8 @@ impl VersionError {
   /// # Examples
   ///
   /// ```
+  /// use mvt_reader::error::VersionError;
+  ///
   /// let layer_name = String::from("my_layer");
   /// let version = 3;
   /// let version_error = VersionError::new(layer_name, version);
@@ -104,6 +110,8 @@ impl std::fmt::Display for VersionError {
   /// # Examples
   ///
   /// ```
+  /// use mvt_reader::error::VersionError;
+  ///
   /// let layer_name = String::from("my_layer");
   /// let version = 3;
   /// let version_error = VersionError::new(layer_name, version);
@@ -130,6 +138,8 @@ impl TagsError {
   /// # Examples
   ///
   /// ```
+  /// use mvt_reader::error::TagsError;
+  ///
   /// let tags_error = TagsError::new();
   /// ```
   pub fn new() -> Self {
@@ -147,6 +157,8 @@ impl std::fmt::Display for TagsError {
   /// # Examples
   ///
   /// ```
+  /// use mvt_reader::error::TagsError;
+  ///
   /// let tags_error = TagsError::new();
   /// println!("{}", tags_error);
   /// ```
@@ -159,23 +171,25 @@ impl std::error::Error for TagsError {}
 
 /// An error indicating that the geometry section of a vector tile contains errors.
 #[derive(Debug, Default)]
-pub struct GeomtryError;
+pub struct GeometryError;
 
-impl GeomtryError {
-  /// Creates a new `GeomtryError` instance.
+impl GeometryError {
+  /// Creates a new `GeometryError` instance.
   ///
   /// # Examples
   ///
   /// ```
-  /// let geometry_error = GeomtryError::new();
+  /// use mvt_reader::error::GeometryError;
+  ///
+  /// let geometry_error = GeometryError::new();
   /// ```
   pub fn new() -> Self {
     Self
   }
 }
 
-impl std::fmt::Display for GeomtryError {
-  /// Formats the error message associated with the `GeomtryError`.
+impl std::fmt::Display for GeometryError {
+  /// Formats the error message associated with the `GeometryError`.
   ///
   /// # Arguments
   ///
@@ -184,7 +198,9 @@ impl std::fmt::Display for GeomtryError {
   /// # Examples
   ///
   /// ```
-  /// let geometry_error = GeomtryError::new();
+  /// use mvt_reader::error::GeometryError;
+  ///
+  /// let geometry_error = GeometryError::new();
   /// println!("{}", geometry_error);
   /// ```
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -192,4 +208,4 @@ impl std::fmt::Display for GeomtryError {
   }
 }
 
-impl std::error::Error for GeomtryError {}
+impl std::error::Error for GeometryError {}

@@ -32,6 +32,8 @@ impl Reader {
   /// # Examples
   ///
   /// ```
+  /// use mvt_reader::Reader;
+  ///
   /// let data = vec![/* Vector tile data */];
   /// let reader = Reader::new(data);
   /// ```
@@ -50,18 +52,20 @@ impl Reader {
   /// # Examples
   ///
   /// ```
+  /// use mvt_reader::Reader;
+  ///
   /// let data = vec![/* Vector tile data */];
   /// let reader = Reader::new(data).unwrap();
   ///
   /// match reader.get_layer_names() {
-  ///     Ok(layer_names) => {
-  ///         for name in layer_names {
-  ///             println!("{}", name);
-  ///         }
+  ///   Ok(layer_names) => {
+  ///     for name in layer_names {
+  ///       todo!();
   ///     }
-  ///     Err(error) => {
-  ///         eprintln!("Error: {}", error);
-  ///     }
+  ///   }
+  ///   Err(error) => {
+  ///     todo!();
+  ///   }
   /// }
   /// ```
   pub fn get_layer_names(&self) -> Result<Vec<String>, error::ParserError> {
@@ -95,18 +99,20 @@ impl Reader {
   /// # Examples
   ///
   /// ```
+  /// use mvt_reader::Reader;
+  ///
   /// let data = vec![/* Vector tile data */];
   /// let reader = Reader::new(data).unwrap();
   ///
   /// match reader.get_features(0) {
-  ///     Ok(features) => {
-  ///         for feature in features {
-  ///             println!("{:?}", feature);
-  ///         }
+  ///   Ok(features) => {
+  ///     for feature in features {
+  ///       todo!();
   ///     }
-  ///     Err(error) => {
-  ///         eprintln!("Error: {}", error);
-  ///     }
+  ///   }
+  ///   Err(error) => {
+  ///     todo!();
+  ///   }
   /// }
   /// ```
   pub fn get_features(&self, layer_index: usize) -> Result<Vec<Feature>, error::ParserError> {
@@ -207,7 +213,7 @@ fn parse_geometry(
   geom_type: GeomType,
 ) -> Result<Geometry<f32>, error::ParserError> {
   if geom_type == GeomType::Unknown {
-    return Err(error::ParserError::new(error::GeomtryError::new()));
+    return Err(error::ParserError::new(error::GeometryError::new()));
   }
 
   // worst case capacity to prevent reallocation. not needed to be exact.
@@ -241,7 +247,7 @@ fn parse_geometry(
           let first_coordinate = match coordinates.first() {
             Some(coord) => coord.to_owned(),
             None => {
-              return Err(error::ParserError::new(error::GeomtryError::new()));
+              return Err(error::ParserError::new(error::GeometryError::new()));
             }
           };
           coordinates.push(first_coordinate);
@@ -319,7 +325,7 @@ fn parse_geometry(
       }
       Ok(polygons.get(0).unwrap().to_owned().into())
     }
-    GeomType::Unknown => Err(error::ParserError::new(error::GeomtryError::new())),
+    GeomType::Unknown => Err(error::ParserError::new(error::GeometryError::new())),
   }
 }
 
@@ -372,6 +378,8 @@ pub mod wasm {
     /// # Examples
     ///
     /// ```
+    /// use mvt_reader::Reader;
+    ///
     /// let tileData = getVectorTileData();
     /// let reader = new Reader(tileData, handleErrors);
     /// ```

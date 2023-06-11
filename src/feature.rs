@@ -21,9 +21,12 @@ impl Feature {
   /// # Examples
   ///
   /// ```
+  /// use mvt_reader::feature::Feature;
+  /// use geo_types::{Geometry, Point};
+  ///
   /// let feature = Feature {
-  ///     geometry: Geometry::Point(Point::new(0.0, 0.0)),
-  ///     properties: None,
+  ///   geometry: Geometry::Point(Point::new(0.0, 0.0)),
+  ///   properties: None,
   /// };
   ///
   /// let geometry = feature.get_geometry();
