@@ -22,13 +22,13 @@
 - Provides an API for accessing layer names and features within a vector tile
 - Can be used as a WebAssembly module in JavaScript (enabled by the `wasm` feature)
 
-# Build the project
+## Build the project
 
 ```sh
 cargo build --release
 ```
 
-# Run tests
+## Run tests
 
 ```sh
 cargo test
@@ -71,7 +71,7 @@ fn main() -> Result<(), ParserError> {
 }
 ```
 
-# WebAssembly Usage
+## WebAssembly Usage
 To use the mvt-reader library as a WebAssembly module in JavaScript, you can install it with npm and use it in your JavaScript code:
 
 ```js
