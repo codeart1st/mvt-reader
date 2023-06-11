@@ -16,12 +16,12 @@
 //! Then, you can import and use the library in your code:
 //!
 //! ```rust
-//! use mvt_reader::{Reader, ParserError};
+//! use mvt_reader::{Reader, error::{ParserError}};
 //!
 //! fn main() -> Result<(), ParserError> {
 //!   // Read a vector tile from file or data
 //!   let data = vec![/* Vector tile data */];
-//!   let reader = Reader::new(data)?;
+//!   let reader = Reader::new(data).unwrap();
 //!
 //!   // Get layer names
 //!   let layer_names = reader.get_layer_names()?;
@@ -33,7 +33,7 @@
 //!   let layer_index = 0;
 //!   let features = reader.get_features(layer_index)?;
 //!   for feature in features {
-//!     println!("Feature: {:?}", feature);
+//!     todo!()
 //!   }
 //!
 //!   Ok(())
@@ -120,7 +120,7 @@ impl Reader {
   /// match reader.get_layer_names() {
   ///   Ok(layer_names) => {
   ///     for name in layer_names {
-  ///       todo!();
+  ///       println!("Layer: {}", name);
   ///     }
   ///   }
   ///   Err(error) => {

@@ -52,7 +52,7 @@ use mvt_reader::{Reader, ParserError};
 fn main() -> Result<(), ParserError> {
   // Read a vector tile from file or data
   let data = vec![/* Vector tile data */];
-  let reader = Reader::new(data)?;
+  let reader = Reader::new(data).unwrap();
 
   // Get layer names
   let layer_names = reader.get_layer_names()?;
@@ -64,7 +64,7 @@ fn main() -> Result<(), ParserError> {
   let layer_index = 0;
   let features = reader.get_features(layer_index)?;
   for feature in features {
-    println!("Feature: {:?}", feature);
+    todo!()
   }
 
   Ok(())
