@@ -19,7 +19,7 @@ wasm = ["wasm-bindgen", "serde-wasm-bindgen", "js-sys", "geojson", "serde"]
 geo-types = "0.7.9"
 prost = { version = "0.11.9", default-features = false, features = ["prost-derive"] }
 wasm-bindgen = { version = "0.2.86", optional = true }
-serde-wasm-bindgen = { version = "0.4", optional = true }
+serde-wasm-bindgen = { version = "0.5", optional = true }
 js-sys = { version = "0.3.63", optional = true }
 geojson = { version = "0.24.1", optional = true }
 serde = { version = "1.0.94", optional = true }
