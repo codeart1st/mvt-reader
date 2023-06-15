@@ -7,7 +7,7 @@
     "node": ">=18"
   },
   "devDependencies": {
-    "@semantic-release-cargo/semantic-release-cargo": "2.1.92",
+    "@semantic-release-cargo/semantic-release-cargo": "2.1.93",
     "@semantic-release/git": "10.0.1",
     "@semantic-release/github": "9.0.3",
     "jest": "29.5.0",
