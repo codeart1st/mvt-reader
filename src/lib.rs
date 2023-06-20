@@ -21,7 +21,7 @@
 //! fn main() -> Result<(), ParserError> {
 //!   // Read a vector tile from file or data
 //!   let data = vec![/* Vector tile data */];
-//!   let reader = Reader::new(data).unwrap();
+//!   let reader = Reader::new(data)?;
 //!
 //!   // Get layer names
 //!   let layer_names = reader.get_layer_names()?;
@@ -67,7 +67,7 @@ use feature::Feature;
 use geo_types::{
   Coord, Geometry, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
 };
-use prost::{bytes::Bytes, DecodeError, Message};
+use prost::{bytes::Bytes, Message};
 use vector_tile::{tile::GeomType, Tile};
 
 /// The dimension used for the vector tile.
@@ -97,10 +97,11 @@ impl Reader {
   /// let data = vec![/* Vector tile data */];
   /// let reader = Reader::new(data);
   /// ```
-  pub fn new(data: Vec<u8>) -> Result<Self, DecodeError> {
-    Ok(Self {
-      tile: Tile::decode(Bytes::from(data))?,
-    })
+  pub fn new(data: Vec<u8>) -> Result<Self, error::ParserError> {
+    match Tile::decode(Bytes::from(data)) {
+      Ok(tile) => Ok(Self { tile }),
+      Err(error) => Err(error::ParserError::new(error::DecodeError::new(error))),
+    }
   }
 
   /// Retrieves the names of the layers in the vector tile.

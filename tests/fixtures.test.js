@@ -20,7 +20,7 @@ describe('Test fixture', () => {
       error = e
     })
     expect(reader).toBeDefined()
-    expect(error).toBe('DecodeError { description: "invalid wire type: Varint (expected LengthDelimited)", stack: [("Layer", "keys"), ("Tile", "layers")] }')
+    expect(error).toBe('ParserError { source: DecodeError { source: DecodeError { description: \"invalid wire type: Varint (expected LengthDelimited)\", stack: [(\"Layer\", \"keys\"), (\"Tile\", \"layers\")] } } }')
 
     expect(reader.getLayerNames()).toBeNull()
     expect(reader.getFeatures(0)).toBeNull()

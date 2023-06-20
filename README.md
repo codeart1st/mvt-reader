@@ -52,7 +52,7 @@ use mvt_reader::{Reader, ParserError};
 fn main() -> Result<(), ParserError> {
   // Read a vector tile from file or data
   let data = vec![/* Vector tile data */];
-  let reader = Reader::new(data).unwrap();
+  let reader = Reader::new(data)?;
 
   // Get layer names
   let layer_names = reader.get_layer_names()?;

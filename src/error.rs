@@ -8,6 +8,7 @@
 //! - `GeometryError`: Represents an error related to the geometry of a feature in a vector tile.
 //! - `TagsError`: Represents an error related to the tags of a feature in a vector tile.
 //! - `VersionError`: Represents an error related to the version of a vector tile.
+//! - `DecodeError`: Represents an error indicating a decoding failure during the parsing of a vector tile.
 //!
 //! # Utilities
 //!
@@ -224,3 +225,33 @@ impl std::fmt::Display for GeometryError {
 }
 
 impl std::error::Error for GeometryError {}
+
+/// An error indicating a decoding failure during the parsing of a vector tile.
+#[derive(Debug)]
+pub struct DecodeError {
+  source: prost::DecodeError,
+}
+
+impl DecodeError {
+  /// Creates a new DecodeError instance with the provided decoding error source from prost.
+  ///
+  /// # Arguments
+  ///
+  /// * source - The underlying decoding error source from prost.
+  pub fn new(source: prost::DecodeError) -> Self {
+    Self { source }
+  }
+}
+
+impl std::fmt::Display for DecodeError {
+  /// Formats the error message associated with the `DecodeError`.
+  ///
+  /// # Arguments
+  ///
+  /// * `f` - The formatter to write the output to.
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "Decode error: {}", self.source)
+  }
+}
+
+impl std::error::Error for DecodeError {}
