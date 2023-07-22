@@ -16,7 +16,7 @@ crate-type = ["cdylib", "rlib"]
 wasm = ["wasm-bindgen", "serde-wasm-bindgen", "js-sys", "geojson", "serde"]
 
 [dependencies]
-geo-types = "0.7.10"
+geo-types = "0.7.11"
 prost = { version = "0.11.9", default-features = false, features = ["prost-derive"] }
 wasm-bindgen = { version = "0.2.87", optional = true }
 serde-wasm-bindgen = { version = "0.5", optional = true }
@@ -25,7 +25,7 @@ geojson = { version = "0.24.1", optional = true }
 serde = { version = "1.0.174", optional = true }
 
 [dev-dependencies]
-serde = "1.0.174"
+serde = { version = "1.0.174", features = ["derive"] }
 serde_json = "1.0.103"
 prost = { version = "0.11.9" } # for testing we need default-features to be enabled
 
