@@ -21,6 +21,8 @@ updates:
       interval: daily
     target-branch: "develop"
     open-pull-requests-limit: 10
+    groups:
+      actions:
 
   - package-ecosystem: github-actions
     directory: /.github/actions/prepare-build-env
@@ -28,6 +30,8 @@ updates:
       interval: daily
     target-branch: "develop"
     open-pull-requests-limit: 10
+    groups:
+      actions:
 
   - package-ecosystem: github-actions
     directory: /.github/actions/post-build-env
@@ -35,3 +39,5 @@ updates:
       interval: daily
     target-branch: "develop"
     open-pull-requests-limit: 10
+    groups:
+      actions:
