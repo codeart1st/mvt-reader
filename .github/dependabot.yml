@@ -23,7 +23,7 @@ updates:
     open-pull-requests-limit: 10
     groups:
       actions:
-        dependency-type: "all"
+        dependency-type: "production"
 
   - package-ecosystem: github-actions
     directory: /.github/actions/prepare-build-env
@@ -33,7 +33,7 @@ updates:
     open-pull-requests-limit: 10
     groups:
       actions:
-        dependency-type: "all"
+        dependency-type: "production"
 
   - package-ecosystem: github-actions
     directory: /.github/actions/post-build-env
@@ -43,4 +43,4 @@ updates:
     open-pull-requests-limit: 10
     groups:
       actions:
-        dependency-type: "all"
+        dependency-type: "production"
