@@ -23,6 +23,7 @@ updates:
     open-pull-requests-limit: 10
     groups:
       actions:
+        dependency-type: "all"
 
   - package-ecosystem: github-actions
     directory: /.github/actions/prepare-build-env
@@ -32,6 +33,7 @@ updates:
     open-pull-requests-limit: 10
     groups:
       actions:
+        dependency-type: "all"
 
   - package-ecosystem: github-actions
     directory: /.github/actions/post-build-env
@@ -41,3 +43,49 @@ updates:
     open-pull-requests-limit: 10
     groups:
       actions:
+        dependency-type: "all"version: 2
+
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: daily
+    target-branch: "develop"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    target-branch: "develop"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    target-branch: "develop"
+    open-pull-requests-limit: 10
+    groups:
+      actions:
+        dependency-type: "all"
+
+  - package-ecosystem: github-actions
+    directory: /.github/actions/prepare-build-env
+    schedule:
+      interval: daily
+    target-branch: "develop"
+    open-pull-requests-limit: 10
+    groups:
+      actions:
+        dependency-type: "all"
+
+  - package-ecosystem: github-actions
+    directory: /.github/actions/post-build-env
+    schedule:
+      interval: daily
+    target-branch: "develop"
+    open-pull-requests-limit: 10
+    groups:
+      actions:
+        dependency-type: "all"
