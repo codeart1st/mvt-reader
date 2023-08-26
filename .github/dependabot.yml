@@ -7,6 +7,9 @@ updates:
       interval: daily
     target-branch: "develop"
     open-pull-requests-limit: 10
+    groups:
+      development-dependencies:
+        dependency-type: "development"
 
   - package-ecosystem: npm
     directory: /
@@ -14,6 +17,9 @@ updates:
       interval: daily
     target-branch: "develop"
     open-pull-requests-limit: 10
+    groups:
+      development-dependencies:
+        dependency-type: "development"
 
   - package-ecosystem: github-actions
     directory: /
