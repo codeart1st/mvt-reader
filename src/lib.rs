@@ -183,25 +183,28 @@ impl Reader {
         let mut features = Vec::with_capacity(layer.features.len());
         for feature in layer.features.iter() {
           if let Some(geom_type) = feature.r#type {
-            if let Some(geom_type) = GeomType::from_i32(geom_type) {
-              let parsed_geometry = match parse_geometry(&feature.geometry, geom_type) {
-                Ok(parsed_geometry) => parsed_geometry,
-                Err(error) => {
-                  return Err(error);
-                }
-              };
+            match GeomType::try_from(geom_type) {
+              Ok(geom_type) => {
+                let parsed_geometry = match parse_geometry(&feature.geometry, geom_type) {
+                  Ok(parsed_geometry) => parsed_geometry,
+                  Err(error) => {
+                    return Err(error);
+                  }
+                };
 
-              let parsed_tags = match parse_tags(&feature.tags, &layer.keys, &layer.values) {
-                Ok(parsed_tags) => parsed_tags,
-                Err(error) => {
-                  return Err(error);
-                }
-              };
+                let parsed_tags = match parse_tags(&feature.tags, &layer.keys, &layer.values) {
+                  Ok(parsed_tags) => parsed_tags,
+                  Err(error) => {
+                    return Err(error);
+                  }
+                };
 
-              features.push(Feature {
-                geometry: parsed_geometry,
-                properties: Some(parsed_tags),
-              });
+                features.push(Feature {
+                  geometry: parsed_geometry,
+                  properties: Some(parsed_tags),
+                });
+              }
+              Err(error) => return Err(error::ParserError::new(error::DecodeError::new(error))),
             }
           }
         }
