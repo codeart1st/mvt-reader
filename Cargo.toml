@@ -26,7 +26,7 @@ serde = { version = "1.0.186", optional = true }
 
 [dev-dependencies]
 serde = { version = "1.0.186", features = ["derive"] }
-serde_json = "1.0.105"
+serde_json = "1.0.106"
 prost = { version = "0.12.0" } # for testing we need default-features to be enabled
 
 [build-dependencies]
