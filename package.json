@@ -8,11 +8,11 @@
   },
   "devDependencies": {
     "semantic-release-replace-plugin": "1.2.7",
-    "@semantic-release-cargo/semantic-release-cargo": "2.2.36",
+    "@semantic-release-cargo/semantic-release-cargo": "2.2.37",
     "@semantic-release/git": "10.0.1",
     "@semantic-release/github": "9.2.3",
     "jest": "29.7.0",
-    "semantic-release": "22.0.7"
+    "semantic-release": "22.0.8"
   },
   "jest": {
     "modulePathIgnorePatterns": [
