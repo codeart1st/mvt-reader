@@ -41,7 +41,7 @@
           "replacements": [
             {
               "files": ["README.md"],
-              "from": "(?<=mvt-reader = \\\")\\d+\\.\\d+\\.\\d+(?=\\\")",
+              "from": "(?<=mvt-reader = \\\")\\d+\\.\\d+\\.\\d+(-\\w+\\.\\d+)?(?=\\\")",
               "to": "${nextRelease.version}",
               "results": [
                 {
@@ -55,7 +55,7 @@
             },
             {
               "files": ["src/lib.rs"],
-              "from": "(?<=mvt-reader = \\\")\\d+\\.\\d+\\.\\d+(?=\\\")",
+              "from": "(?<=mvt-reader = \\\")\\d+\\.\\d+\\.\\d+(-\\w+\\.\\d+)?(?=\\\")",
               "to": "${nextRelease.version}",
               "results": [
                 {
