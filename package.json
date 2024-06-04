@@ -51,6 +51,12 @@
                   "numReplacements": 1
                 },
                 {
+                  "file": "pkg/README.md",
+                  "hasChanged": true,
+                  "numMatches": 1,
+                  "numReplacements": 1
+                },
+                {
                   "file": "src/lib.rs",
                   "hasChanged": true,
                   "numMatches": 1,
