@@ -40,12 +40,18 @@
         {
           "replacements": [
             {
-              "files": ["README.md"],
+              "files": ["README.md", "pkg/README.md", "src/lib.rs"],
               "from": "(?<=mvt-reader = \\\")\\d+\\.\\d+\\.\\d+(-\\w+\\.\\d+)?(?=\\\")",
               "to": "${nextRelease.version}",
               "results": [
                 {
                   "file": "README.md",
+                  "hasChanged": true,
+                  "numMatches": 1,
+                  "numReplacements": 1
+                },
+                {
+                  "file": "src/lib.rs",
                   "hasChanged": true,
                   "numMatches": 1,
                   "numReplacements": 1
@@ -55,7 +61,7 @@
             },
             {
               "files": ["src/lib.rs"],
-              "from": "(?<=mvt-reader = \\\")\\d+\\.\\d+\\.\\d+(-\\w+\\.\\d+)?(?=\\\")",
+              "from": "(?<=version = \\\")\\d+\\.\\d+\\.\\d+(-\\w+\\.\\d+)?(?=\\\")",
               "to": "${nextRelease.version}",
               "results": [
                 {
