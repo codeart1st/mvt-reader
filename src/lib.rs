@@ -288,7 +288,7 @@ fn parse_geometry(
   let mut cursor: [i32; 2] = [0, 0];
   let mut parameter_count: u32 = 0;
 
-  for (_, value) in geometry_data.iter().enumerate() {
+  for value in geometry_data.iter() {
     if parameter_count == 0 {
       let command_integer = value;
       let id = (command_integer & 0x7) as u8;
@@ -387,7 +387,7 @@ fn parse_geometry(
         ));
         return Ok(MultiPolygon::new(polygons).into());
       }
-      Ok(polygons.get(0).unwrap().to_owned().into())
+      Ok(polygons.first().unwrap().to_owned().into())
     }
     GeomType::Unknown => Err(error::ParserError::new(error::GeometryError::new())),
   }
