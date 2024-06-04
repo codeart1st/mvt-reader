@@ -10,7 +10,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! mvt-reader = "1.3.0-alpha.1"
+//! mvt-reader = "1.3.0"
 //! ```
 //!
 //! Then, you can import and use the library in your code:
