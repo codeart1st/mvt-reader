@@ -25,7 +25,7 @@ geojson = { version = "0.24", optional = true }
 serde = { version = "1.0", optional = true }
 
 [dev-dependencies]
-serde = { version = "1.0.203", features = ["derive"] }
+serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 prost = { version = "0.12.6" } # for testing we need default-features to be enabled
 
