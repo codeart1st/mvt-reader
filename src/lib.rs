@@ -100,7 +100,9 @@ impl Reader {
   pub fn new(data: Vec<u8>) -> Result<Self, error::ParserError> {
     match Tile::decode(Bytes::from(data)) {
       Ok(tile) => Ok(Self { tile }),
-      Err(error) => Err(error::ParserError::new(error::DecodeError::new(error))),
+      Err(error) => Err(error::ParserError::new(error::DecodeError::new(Box::new(
+        error,
+      )))),
     }
   }
 
@@ -204,7 +206,11 @@ impl Reader {
                   properties: Some(parsed_tags),
                 });
               }
-              Err(error) => return Err(error::ParserError::new(error::DecodeError::new(error))),
+              Err(error) => {
+                return Err(error::ParserError::new(error::DecodeError::new(Box::new(
+                  error,
+                ))))
+              }
             }
           }
         }

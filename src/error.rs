@@ -229,16 +229,16 @@ impl std::error::Error for GeometryError {}
 /// An error indicating a decoding failure during the parsing of a vector tile.
 #[derive(Debug)]
 pub struct DecodeError {
-  source: prost::DecodeError,
+  source: Box<dyn std::error::Error>,
 }
 
 impl DecodeError {
-  /// Creates a new DecodeError instance with the provided decoding error source from prost.
+  /// Creates a new DecodeError instance with the provided decoding error from prost.
   ///
   /// # Arguments
   ///
-  /// * source - The underlying decoding error source from prost.
-  pub fn new(source: prost::DecodeError) -> Self {
+  /// * source - The underlying decoding error from prost.
+  pub fn new(source: Box<dyn std::error::Error>) -> Self {
     Self { source }
   }
 }
