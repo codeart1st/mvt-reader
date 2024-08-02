@@ -86,7 +86,7 @@ jobs:
           wasm-pack build --release --target nodejs -d pkg/node -- --features wasm
 
       - name: Upload wasm-pack build output
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.3.5
         with:
           name: wasm-pack-build
           path: pkg
