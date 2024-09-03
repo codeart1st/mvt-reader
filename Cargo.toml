@@ -30,4 +30,4 @@ serde_json = "1.0.127"
 prost = { version = "0.13.2" } # for testing we need default-features to be enabled
 
 [build-dependencies]
-prost-build = "0.13.1"
+prost-build = "0.13.2"
