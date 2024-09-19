@@ -39,7 +39,7 @@ jobs:
           path: pkg
 
       - name: Setup node
-        uses: actions/setup-node@v4.0.3
+        uses: actions/setup-node@v4.0.4
         with:
           node-version: "lts/*"
 
