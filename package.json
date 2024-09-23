@@ -8,9 +8,9 @@
   },
   "devDependencies": {
     "semantic-release-replace-plugin": "1.2.7",
-    "@semantic-release-cargo/semantic-release-cargo": "2.3.67",
+    "@semantic-release-cargo/semantic-release-cargo": "2.3.69",
     "@semantic-release/git": "10.0.1",
-    "@semantic-release/github": "10.3.4",
+    "@semantic-release/github": "10.3.5",
     "jest": "29.7.0",
     "semantic-release": "24.1.1"
   },
