@@ -17,7 +17,7 @@
 /// A structure representing a parser error.
 #[derive(Debug)]
 pub struct ParserError {
-  source: Box<dyn std::error::Error>,
+  source: Box<dyn core::error::Error>,
 }
 
 impl ParserError {
@@ -35,14 +35,14 @@ impl ParserError {
   /// let source_error = std::io::Error::new(std::io::ErrorKind::Other, "Custom error");
   /// let parser_error = ParserError::new(source_error);
   /// ```
-  pub fn new<T: std::error::Error + 'static>(source: T) -> Self {
+  pub fn new<T: core::error::Error + 'static>(source: T) -> Self {
     Self {
       source: Box::new(source),
     }
   }
 }
 
-impl std::fmt::Display for ParserError {
+impl core::fmt::Display for ParserError {
   /// Formats the error message associated with the `ParserError`.
   ///
   /// # Arguments
@@ -59,12 +59,12 @@ impl std::fmt::Display for ParserError {
   /// let parser_error = ParserError::new(source_error);
   /// println!("{}", parser_error);
   /// ```
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     self.source.fmt(f)
   }
 }
 
-impl std::error::Error for ParserError {
+impl core::error::Error for ParserError {
   /// Returns the underlying source of the `ParserError`.
   ///
   /// # Examples
@@ -78,7 +78,7 @@ impl std::error::Error for ParserError {
   /// let source = parser_error.source();
   /// println!("Source: {}", source.unwrap());
   /// ```
-  fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+  fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
     Some(self.source.as_ref())
   }
 }
@@ -116,7 +116,7 @@ impl VersionError {
   }
 }
 
-impl std::fmt::Display for VersionError {
+impl core::fmt::Display for VersionError {
   /// Formats the error message associated with the `VersionError`.
   ///
   /// # Arguments
@@ -133,7 +133,7 @@ impl std::fmt::Display for VersionError {
   /// let version_error = VersionError::new(layer_name, version);
   /// println!("{}", version_error);
   /// ```
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     write!(
       f,
       "Vector tile version not supported for layer `{}` (found version: {})",
@@ -142,7 +142,7 @@ impl std::fmt::Display for VersionError {
   }
 }
 
-impl std::error::Error for VersionError {}
+impl core::error::Error for VersionError {}
 
 /// An error indicating that the tags section of a vector tile contains errors.
 #[derive(Debug, Default)]
@@ -163,7 +163,7 @@ impl TagsError {
   }
 }
 
-impl std::fmt::Display for TagsError {
+impl core::fmt::Display for TagsError {
   /// Formats the error message associated with the `TagsError`.
   ///
   /// # Arguments
@@ -178,12 +178,12 @@ impl std::fmt::Display for TagsError {
   /// let tags_error = TagsError::new();
   /// println!("{}", tags_error);
   /// ```
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     write!(f, "Tags section contains errors")
   }
 }
 
-impl std::error::Error for TagsError {}
+impl core::error::Error for TagsError {}
 
 /// An error indicating that the geometry section of a vector tile contains errors.
 #[derive(Debug, Default)]
@@ -204,7 +204,7 @@ impl GeometryError {
   }
 }
 
-impl std::fmt::Display for GeometryError {
+impl core::fmt::Display for GeometryError {
   /// Formats the error message associated with the `GeometryError`.
   ///
   /// # Arguments
@@ -219,17 +219,17 @@ impl std::fmt::Display for GeometryError {
   /// let geometry_error = GeometryError::new();
   /// println!("{}", geometry_error);
   /// ```
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     write!(f, "Geometry section contains errors")
   }
 }
 
-impl std::error::Error for GeometryError {}
+impl core::error::Error for GeometryError {}
 
 /// An error indicating a decoding failure during the parsing of a vector tile.
 #[derive(Debug)]
 pub struct DecodeError {
-  source: Box<dyn std::error::Error>,
+  source: Box<dyn core::error::Error>,
 }
 
 impl DecodeError {
@@ -238,20 +238,20 @@ impl DecodeError {
   /// # Arguments
   ///
   /// * source - The underlying decoding error from prost.
-  pub fn new(source: Box<dyn std::error::Error>) -> Self {
+  pub fn new(source: Box<dyn core::error::Error>) -> Self {
     Self { source }
   }
 }
 
-impl std::fmt::Display for DecodeError {
+impl core::fmt::Display for DecodeError {
   /// Formats the error message associated with the `DecodeError`.
   ///
   /// # Arguments
   ///
   /// * `f` - The formatter to write the output to.
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     write!(f, "Decode error: {}", self.source)
   }
 }
 
-impl std::error::Error for DecodeError {}
+impl core::error::Error for DecodeError {}

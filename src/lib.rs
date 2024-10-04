@@ -350,12 +350,12 @@ fn parse_geometry(
       if parameter_count % DIMENSION == 0 {
         cursor[0] = match cursor[0].checked_add(integer_value) {
           Some(result) => result,
-          None => std::i32::MAX, // clip value
+          None => i32::MAX, // clip value
         };
       } else {
         cursor[1] = match cursor[1].checked_add(integer_value) {
           Some(result) => result,
-          None => std::i32::MAX, // clip value
+          None => i32::MAX, // clip value
         };
         coordinates.push(Coord {
           x: cursor[0] as f32,
