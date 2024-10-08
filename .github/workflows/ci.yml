@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4.2.0
+        uses: actions/checkout@v4.2.1
         with:
           submodules: recursive
 
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4.2.0
+        uses: actions/checkout@v4.2.1
         with:
           submodules: recursive
 
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4.2.0
+        uses: actions/checkout@v4.2.1
         with:
           submodules: recursive
 
@@ -86,7 +86,7 @@ jobs:
           wasm-pack build --release --target nodejs -d pkg/node -- --features wasm
 
       - name: Upload wasm-pack build output
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v4.4.1
         with:
           name: wasm-pack-build
           path: pkg
@@ -103,7 +103,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4.2.0
+        uses: actions/checkout@v4.2.1
         with:
           submodules: recursive
 
@@ -128,7 +128,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4.2.0
+        uses: actions/checkout@v4.2.1
         with:
           submodules: recursive
 
