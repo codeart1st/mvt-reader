@@ -67,11 +67,13 @@ use feature::Feature;
 use geo_types::{
   Coord, Geometry, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
 };
-use prost::{bytes::Bytes, Message};
-use vector_tile::{tile::GeomType, Tile};
+pub use prost::{bytes::Bytes, Message};
 
 /// The dimension used for the vector tile.
 const DIMENSION: u32 = 2;
+
+pub use vector_tile::*;
+use tile::GeomType;
 
 /// Reader for decoding and accessing vector tile data.
 pub struct Reader {
@@ -224,7 +226,7 @@ impl Reader {
 fn parse_tags(
   tags: &[u32],
   keys: &[String],
-  values: &[vector_tile::tile::Value],
+  values: &[tile::Value],
 ) -> Result<std::collections::HashMap<String, String>, error::ParserError> {
   let mut result = std::collections::HashMap::new();
   for item in tags.chunks(2) {
@@ -242,7 +244,7 @@ fn parse_tags(
   Ok(result)
 }
 
-fn get_string_value(value: vector_tile::tile::Value) -> String {
+fn get_string_value(value: tile::Value) -> String {
   if value.string_value.is_some() {
     return value.string_value.unwrap();
   }
