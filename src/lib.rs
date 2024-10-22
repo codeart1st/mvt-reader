@@ -67,12 +67,11 @@ use feature::Feature;
 use geo_types::{
   Coord, Geometry, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
 };
-pub use prost::{bytes::Bytes, Message};
+use prost::{bytes::Bytes, Message};
+use vector_tile::{tile::GeomType, Tile};
 
 /// The dimension used for the vector tile.
 const DIMENSION: u32 = 2;
-
-pub use vector_tile::*;
 
 /// Reader for decoding and accessing vector tile data.
 pub struct Reader {
@@ -186,7 +185,7 @@ impl Reader {
         let mut features = Vec::with_capacity(layer.features.len());
         for feature in layer.features.iter() {
           if let Some(geom_type) = feature.r#type {
-            match tile::GeomType::try_from(geom_type) {
+            match GeomType::try_from(geom_type) {
               Ok(geom_type) => {
                 let parsed_geometry = match parse_geometry(&feature.geometry, geom_type) {
                   Ok(parsed_geometry) => parsed_geometry,
@@ -281,9 +280,9 @@ fn shoelace_formula(points: &[Point<f32>]) -> f32 {
 
 fn parse_geometry(
   geometry_data: &[u32],
-  geom_type: tile::GeomType,
+  geom_type: GeomType,
 ) -> Result<Geometry<f32>, error::ParserError> {
-  if geom_type == tile::GeomType::Unknown {
+  if geom_type == GeomType::Unknown {
     return Err(error::ParserError::new(error::GeometryError::new()));
   }
 
@@ -303,7 +302,7 @@ fn parse_geometry(
         1 => {
           // MoveTo
           parameter_count = (command_integer >> 3) * DIMENSION;
-          if geom_type == tile::GeomType::Linestring && !coordinates.is_empty() {
+          if geom_type == GeomType::Linestring && !coordinates.is_empty() {
             linestrings.push(LineString::new(coordinates));
             // start with a new linestring
             coordinates = Vec::with_capacity(geometry_data.len());
@@ -368,7 +367,7 @@ fn parse_geometry(
   }
 
   match geom_type {
-    tile::GeomType::Linestring => {
+    GeomType::Linestring => {
       // the last linestring is in coordinates vec
       if !linestrings.is_empty() {
         linestrings.push(LineString::new(coordinates));
@@ -376,7 +375,7 @@ fn parse_geometry(
       }
       Ok(LineString::new(coordinates).into())
     }
-    tile::GeomType::Point => Ok(
+    GeomType::Point => Ok(
       MultiPoint(
         coordinates
           .iter()
@@ -385,7 +384,7 @@ fn parse_geometry(
       )
       .into(),
     ),
-    tile::GeomType::Polygon => {
+    GeomType::Polygon => {
       if !linestrings.is_empty() {
         // finish pending polygon
         polygons.push(Polygon::new(
@@ -396,7 +395,7 @@ fn parse_geometry(
       }
       Ok(polygons.first().unwrap().to_owned().into())
     }
-    tile::GeomType::Unknown => Err(error::ParserError::new(error::GeometryError::new())),
+    GeomType::Unknown => Err(error::ParserError::new(error::GeometryError::new())),
   }
 }
 
