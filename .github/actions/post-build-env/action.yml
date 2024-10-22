@@ -14,7 +14,7 @@ runs:
   steps:
     - name: Cache cargo output (save)
       if: inputs.cargo-cache-hit != 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-      uses: actions/cache/save@v4.1.1
+      uses: actions/cache/save@v4.1.2
       with:
         path: |
           ~/.cargo/bin/
