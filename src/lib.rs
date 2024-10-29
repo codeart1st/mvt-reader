@@ -221,6 +221,38 @@ impl Reader {
       None => Ok(vec![]),
     }
   }
+
+  /// Retrieves the extent of the layers in the vector tile.
+  ///
+  /// # Returns
+  ///
+  /// A u32 value. default 4096
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// use mvt_reader::Reader;
+  ///
+  /// let data = vec![/* Vector tile data */];
+  /// let reader = Reader::new(data).unwrap();
+  ///
+  /// match reader.get_layer_names() {
+  ///   Ok(layer_names) => {
+  ///     for (index, _name) in layer_names.iter().enumerate() {
+  ///       let extent = reader.get_extent(index);
+  ///       println!("extent: {}", extent);
+  ///     }
+  ///   }
+  ///   Err(error) => {
+  ///     todo!();
+  ///   }
+  /// }
+  /// ```
+  pub fn get_extent(&self, layer_index: usize) -> u32 {
+    self.tile.layers.get(layer_index)
+        .and_then(|layer| layer.extent)
+        .unwrap_or(4096)
+  }
 }
 
 fn parse_tags(
