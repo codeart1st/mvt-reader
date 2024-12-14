@@ -24,7 +24,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.2
         with:
           submodules: recursive
           fetch-depth: 0
@@ -39,7 +39,7 @@ jobs:
           path: pkg
 
       - name: Setup node
-        uses: actions/setup-node@v4.0.3
+        uses: actions/setup-node@v4.1.0
         with:
           node-version: "lts/*"
 
