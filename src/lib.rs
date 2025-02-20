@@ -68,6 +68,7 @@ use geo_types::{
   Coord, Geometry, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
 };
 use prost::{bytes::Bytes, Message};
+use serde_json::{Map, Number, Value};
 use vector_tile::{tile::GeomType, Tile};
 
 /// The dimension used for the vector tile.
@@ -204,6 +205,7 @@ impl Reader {
                 features.push(Feature {
                   geometry: parsed_geometry,
                   properties: Some(parsed_tags),
+                  id: feature.id,
                 });
               }
               Err(error) => {
@@ -225,8 +227,8 @@ fn parse_tags(
   tags: &[u32],
   keys: &[String],
   values: &[vector_tile::tile::Value],
-) -> Result<std::collections::HashMap<String, String>, error::ParserError> {
-  let mut result = std::collections::HashMap::new();
+) -> Result<Map<String, Value>, error::ParserError> {
+  let mut result = Map::new();
   for item in tags.chunks(2) {
     if item.len() != 2
       || item[0] > keys.len().try_into().unwrap()
@@ -236,35 +238,30 @@ fn parse_tags(
     }
     result.insert(
       (*keys.get(item[0] as usize).expect("item not found")).clone(),
-      get_string_value((*values.get(item[1] as usize).expect("item not found")).clone()),
+      get_value((*values.get(item[1] as usize).expect("item not found")).clone()),
     );
   }
   Ok(result)
 }
 
-fn get_string_value(value: vector_tile::tile::Value) -> String {
+fn get_value(value: vector_tile::tile::Value) -> Value {
   if value.string_value.is_some() {
-    return value.string_value.unwrap();
+    Value::String(value.string_value.unwrap())
+  } else if value.float_value.is_some() {
+    Value::Number(Number::from_f64(f64::from(value.float_value.unwrap())).unwrap())
+  } else if value.double_value.is_some() {
+    Value::Number(Number::from_f64(value.double_value.unwrap()).unwrap())
+  } else if value.int_value.is_some() {
+    Value::Number(Number::from(value.int_value.unwrap()))
+  } else if value.uint_value.is_some() {
+    Value::Number(Number::from(value.uint_value.unwrap()))
+  } else if value.sint_value.is_some() {
+    Value::Number(Number::from(value.sint_value.unwrap()))
+  } else if value.bool_value.is_some() {
+    Value::Bool(value.bool_value.unwrap())
+  } else {
+    Value::Null
   }
-  if value.float_value.is_some() {
-    return value.float_value.unwrap().to_string();
-  }
-  if value.double_value.is_some() {
-    return value.double_value.unwrap().to_string();
-  }
-  if value.int_value.is_some() {
-    return value.int_value.unwrap().to_string();
-  }
-  if value.uint_value.is_some() {
-    return value.uint_value.unwrap().to_string();
-  }
-  if value.sint_value.is_some() {
-    return value.sint_value.unwrap().to_string();
-  }
-  if value.bool_value.is_some() {
-    return value.bool_value.unwrap().to_string();
-  }
-  String::new()
 }
 
 fn shoelace_formula(points: &[Point<f32>]) -> f32 {

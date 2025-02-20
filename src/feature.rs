@@ -8,17 +8,18 @@
 //!
 //! - `Feature`: Represents a feature with geometry and properties.
 
-use std::collections::HashMap;
-
 use geo_types::Geometry;
+use serde_json::{Map, Value};
 
 /// A structure representing a feature in a vector tile.
 pub struct Feature {
+  pub id: Option<u64>,
+
   /// The geometry of the feature.
   pub geometry: Geometry<f32>,
 
   /// Optional properties associated with the feature.
-  pub properties: Option<HashMap<String, String>>,
+  pub properties: Option<Map<String, Value>>,
 }
 
 impl Feature {

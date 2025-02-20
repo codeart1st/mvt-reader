@@ -17,17 +17,20 @@ wasm = ["wasm-bindgen", "serde-wasm-bindgen", "js-sys", "geojson", "serde"]
 
 [dependencies]
 geo-types = "0.7"
-prost = { version = "0.13", default-features = false, features = ["prost-derive", "std"] }
+prost = { version = "0.13", default-features = false, features = [
+  "prost-derive",
+  "std",
+] }
 wasm-bindgen = { version = "0.2", optional = true }
 serde-wasm-bindgen = { version = "0.6", optional = true }
 js-sys = { version = "0.3", optional = true }
 geojson = { version = "0.24", optional = true }
 serde = { version = "1.0", optional = true }
+serde_json = "1.0.133"
 
 [dev-dependencies]
 serde = { version = "1.0.216", features = ["derive"] }
-serde_json = "1.0.133"
-prost = { version = "0.13.4" } # for testing we need default-features to be enabled
+prost = { version = "0.13.4" }                         # for testing we need default-features to be enabled
 
 [build-dependencies]
 prost-build = "0.13.4"
