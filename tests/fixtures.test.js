@@ -8,6 +8,7 @@ describe('Test fixture', () => {
     expect(reader.getFeatures(0)).toStrictEqual([
       {
         geometry: { coordinates: [[25, 17]], type: 'MultiPoint' },
+        id: 1,
         properties: { key1: 'i am a string value' },
         type: 'Feature'
       }

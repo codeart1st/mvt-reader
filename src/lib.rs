@@ -203,6 +203,7 @@ impl Reader {
 
                 features.push(Feature {
                   geometry: parsed_geometry,
+                  id: feature.id,
                   properties: Some(parsed_tags),
                 });
               }
@@ -402,7 +403,7 @@ fn parse_geometry(
 #[cfg(feature = "wasm")]
 pub mod wasm {
 
-  use geojson::{Feature, GeoJson, JsonObject};
+  use geojson::{feature::Id, Feature, GeoJson, JsonObject};
   use serde::Serialize;
   use serde_wasm_bindgen::Serializer;
   use wasm_bindgen::prelude::*;
@@ -421,7 +422,7 @@ pub mod wasm {
       let geojson = GeoJson::Feature(Feature {
         bbox: None,
         geometry: Some(feature.get_geometry().into()),
-        id: None,
+        id: feature.id.map(|id| Id::Number(id.into())),
         properties,
         foreign_members: None,
       });

@@ -17,6 +17,9 @@ pub struct Feature {
   /// The geometry of the feature.
   pub geometry: Geometry<f32>,
 
+  /// Optional identifier for the feature.
+  pub id: Option<u64>,
+
   /// Optional properties associated with the feature.
   pub properties: Option<HashMap<String, String>>,
 }
@@ -36,6 +39,7 @@ impl Feature {
   ///
   /// let feature = Feature {
   ///   geometry: Geometry::Point(Point::new(0.0, 0.0)),
+  ///   id: None,
   ///   properties: None,
   /// };
   ///
