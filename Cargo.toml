@@ -7,7 +7,7 @@ repository = "https://github.com/codeart1st/mvt-reader"
 keywords = ["rust", "webassembly", "wasm", "pbf", "mvt"]
 include = ["/src", "/LICENSE", "/build.rs", "vector_tile.proto"]
 license = "MIT"
-edition = "2021"
+edition = "2024"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
