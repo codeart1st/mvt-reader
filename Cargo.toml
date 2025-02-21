@@ -31,3 +31,4 @@ prost = { version = "0.13.5" } # for testing we need default-features to be enab
 
 [build-dependencies]
 prost-build = "0.13.5"
+
