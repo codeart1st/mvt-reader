@@ -41,7 +41,7 @@ To use the `mvt-reader` library in your Rust project, add the following to your 
 
 ```toml
 [dependencies]
-mvt-reader = "1.7.0"
+mvt-reader = "1.8.0-alpha.1"
 ```
 
 Then, you can import and use the library in your code:
