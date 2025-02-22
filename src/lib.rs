@@ -63,12 +63,12 @@ pub mod feature;
 
 mod vector_tile;
 
-use feature::Feature;
+use feature::{Feature, Value};
 use geo_types::{
   Coord, Geometry, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
 };
-use prost::{bytes::Bytes, Message};
-use vector_tile::{tile::GeomType, Tile};
+use prost::{Message, bytes::Bytes};
+use vector_tile::{Tile, tile::GeomType};
 
 /// The dimension used for the vector tile.
 const DIMENSION: u32 = 2;
@@ -142,7 +142,7 @@ impl Reader {
           return Err(error::ParserError::new(error::VersionError::new(
             layer.name.clone(),
             layer.version,
-          )))
+          )));
         }
       }
     }
@@ -210,7 +210,7 @@ impl Reader {
               Err(error) => {
                 return Err(error::ParserError::new(error::DecodeError::new(Box::new(
                   error,
-                ))))
+                ))));
               }
             }
           }
@@ -226,7 +226,7 @@ fn parse_tags(
   tags: &[u32],
   keys: &[String],
   values: &[vector_tile::tile::Value],
-) -> Result<std::collections::HashMap<String, String>, error::ParserError> {
+) -> Result<std::collections::HashMap<String, Value>, error::ParserError> {
   let mut result = std::collections::HashMap::new();
   for item in tags.chunks(2) {
     if item.len() != 2
@@ -237,35 +237,35 @@ fn parse_tags(
     }
     result.insert(
       (*keys.get(item[0] as usize).expect("item not found")).clone(),
-      get_string_value((*values.get(item[1] as usize).expect("item not found")).clone()),
+      map_value((*values.get(item[1] as usize).expect("item not found")).clone()),
     );
   }
   Ok(result)
 }
 
-fn get_string_value(value: vector_tile::tile::Value) -> String {
-  if value.string_value.is_some() {
-    return value.string_value.unwrap();
+fn map_value(value: vector_tile::tile::Value) -> Value {
+  if let Some(s) = value.string_value {
+    return Value::String(s);
   }
-  if value.float_value.is_some() {
-    return value.float_value.unwrap().to_string();
+  if let Some(f) = value.float_value {
+    return Value::Float(f);
   }
-  if value.double_value.is_some() {
-    return value.double_value.unwrap().to_string();
+  if let Some(d) = value.double_value {
+    return Value::Double(d);
   }
-  if value.int_value.is_some() {
-    return value.int_value.unwrap().to_string();
+  if let Some(i) = value.int_value {
+    return Value::Int(i);
   }
-  if value.uint_value.is_some() {
-    return value.uint_value.unwrap().to_string();
+  if let Some(u) = value.uint_value {
+    return Value::UInt(u);
   }
-  if value.sint_value.is_some() {
-    return value.sint_value.unwrap().to_string();
+  if let Some(s) = value.sint_value {
+    return Value::SInt(s);
   }
-  if value.bool_value.is_some() {
-    return value.bool_value.unwrap().to_string();
+  if let Some(b) = value.bool_value {
+    return Value::Bool(b);
   }
-  String::new()
+  Value::Null
 }
 
 fn shoelace_formula(points: &[Point<f32>]) -> f32 {
@@ -403,10 +403,26 @@ fn parse_geometry(
 #[cfg(feature = "wasm")]
 pub mod wasm {
 
-  use geojson::{feature::Id, Feature, GeoJson, JsonObject};
+  use crate::feature::Value;
+  use geojson::{Feature, GeoJson, JsonObject, JsonValue, feature::Id};
   use serde::Serialize;
   use serde_wasm_bindgen::Serializer;
   use wasm_bindgen::prelude::*;
+
+  impl From<Value> for JsonValue {
+    fn from(value: Value) -> Self {
+      match value {
+        Value::Null => JsonValue::Null,
+        Value::Bool(b) => JsonValue::from(b),
+        Value::Int(i) => JsonValue::from(i),
+        Value::UInt(u) => JsonValue::from(u),
+        Value::SInt(s) => JsonValue::from(s),
+        Value::Float(f) => JsonValue::from(f),
+        Value::Double(d) => JsonValue::from(d),
+        Value::String(s) => JsonValue::from(s),
+      }
+    }
+  }
 
   /// Converts a `super::feature::Feature` into a `wasm_bindgen::JsValue`.
   impl From<super::feature::Feature> for wasm_bindgen::JsValue {

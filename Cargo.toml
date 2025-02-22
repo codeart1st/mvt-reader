@@ -13,7 +13,7 @@ edition = "2024"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-wasm = ["wasm-bindgen", "serde-wasm-bindgen", "js-sys", "geojson", "serde"]
+wasm = ["wasm-bindgen", "serde-wasm-bindgen", "js-sys", "geojson", "serde", "serde_json"]
 
 [dependencies]
 geo-types = "0.7"
@@ -23,6 +23,7 @@ serde-wasm-bindgen = { version = "0.6", optional = true }
 js-sys = { version = "0.3", optional = true }
 geojson = { version = "0.24", optional = true }
 serde = { version = "1.0", optional = true }
+serde_json = { version = "1.0", optional = true }
 
 [dev-dependencies]
 serde = { version = "1.0.218", features = ["derive"] }
