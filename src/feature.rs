@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use geo_types::Geometry;
 
 /// An enumeration representing the value of a property associated with a feature.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Value {
   String(String),
   Float(f32),
