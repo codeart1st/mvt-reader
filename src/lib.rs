@@ -10,7 +10,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! mvt-reader = "1.8.0-alpha.2"
+//! mvt-reader = "2.0.0-alpha.1"
 //! ```
 //!
 //! Then, you can import and use the library in your code:
@@ -50,7 +50,7 @@
 //!
 //! ```toml
 //! [dependencies.mvt-reader]
-//! version = "1.8.0-alpha.2"
+//! version = "2.0.0-alpha.1"
 //! features = ["wasm"]
 //! ```
 //!
