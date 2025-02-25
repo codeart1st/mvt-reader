@@ -6,7 +6,7 @@
 //!
 //! The `feature` module defines the following types:
 //!
-//! - `Feature`: Represents a feature with geometry and properties.
+//! - `Feature`: Represents a feature with geometry, an optional id and optional properties.
 
 use std::collections::HashMap;
 
