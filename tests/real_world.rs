@@ -1,11 +1,43 @@
-use std::fs::{read, read_dir, DirEntry};
+use std::error::Error;
+use std::fs::{DirEntry, read, read_dir};
 use std::path::PathBuf;
-use std::{io::Error, result::Result};
+use std::{io, result::Result};
 
-use mvt_reader::Reader;
+use mvt_reader::{Reader, error::GeometryError};
 
 #[test]
-fn read_all_fixtures() -> Result<(), Error> {
+fn read_corrupted_fixture() -> Result<(), io::Error> {
+  let bytes = [
+    0x1a, 0x19, 0x12, 0x14, 0x10, 0x3d, 0x20, 0x11, 0x20, 0x28, 0x20, 0x28, 0x20, 0x20, 0x20, 0x20,
+    0x20, 0x38, 0x20, 0x20, 0x18, 0x03, 0x40, 0x11, 0x60, 0xef, 0x23,
+  ];
+  let reader_result = Reader::new(bytes.to_vec());
+  match reader_result {
+    Ok(reader) => {
+      let features = reader.get_features(0);
+      match features {
+        Ok(_) => {
+          panic!("Parsing should have failed")
+        }
+        Err(error) => match error.source() {
+          Some(error) if error.is::<GeometryError>() => {
+            println!("Expected error: {}", error);
+          }
+          _ => {
+            panic!("Unexpected error: {}", error)
+          }
+        },
+      }
+    }
+    Err(_) => {
+      panic!("Parsing failed unexpectedly")
+    }
+  }
+  Ok(())
+}
+
+#[test]
+fn read_all_fixtures() -> Result<(), io::Error> {
   for mvt_file in get_all_real_world_fixtures()?.iter() {
     if !mvt_file.extension().unwrap().eq_ignore_ascii_case("mvt") {
       println!("Skipped file {:?}", mvt_file);
@@ -49,7 +81,7 @@ pub fn get_sorted_dir_entries(path: &str) -> std::io::Result<Vec<DirEntry>> {
   Ok(entries)
 }
 
-pub fn get_all_real_world_fixtures() -> Result<Vec<PathBuf>, Error> {
+pub fn get_all_real_world_fixtures() -> Result<Vec<PathBuf>, io::Error> {
   let mut result = Vec::new();
 
   let countries = get_sorted_dir_entries("mvt-fixtures/real-world")?;

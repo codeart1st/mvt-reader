@@ -394,7 +394,10 @@ fn parse_geometry(
         ));
         return Ok(MultiPolygon::new(polygons).into());
       }
-      Ok(polygons.first().unwrap().to_owned().into())
+      match polygons.first() {
+        Some(polygon) => Ok(polygon.to_owned().into()),
+        None => Err(error::ParserError::new(error::GeometryError::new())),
+      }
     }
     GeomType::Unknown => Err(error::ParserError::new(error::GeometryError::new())),
   }
