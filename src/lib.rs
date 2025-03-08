@@ -230,14 +230,14 @@ fn parse_tags(
   let mut result = std::collections::HashMap::new();
   for item in tags.chunks(2) {
     if item.len() != 2
-      || item[0] > keys.len().try_into().unwrap()
-      || item[1] > values.len().try_into().unwrap()
+      || item[0] >= keys.len().try_into().unwrap()
+      || item[1] >= values.len().try_into().unwrap()
     {
       return Err(error::ParserError::new(error::TagsError::new()));
     }
     result.insert(
-      (*keys.get(item[0] as usize).expect("item not found")).clone(),
-      map_value((*values.get(item[1] as usize).expect("item not found")).clone()),
+      keys[item[0] as usize].clone(),
+      map_value(values[item[1] as usize].clone()),
     );
   }
   Ok(result)

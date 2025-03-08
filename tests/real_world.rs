@@ -3,10 +3,11 @@ use std::fs::{DirEntry, read, read_dir};
 use std::path::PathBuf;
 use std::{io, result::Result};
 
+use mvt_reader::error::TagsError;
 use mvt_reader::{Reader, error::GeometryError};
 
 #[test]
-fn read_corrupted_fixture() -> Result<(), io::Error> {
+fn read_corrupted_geometry_fixture() -> Result<(), io::Error> {
   let bytes = [
     0x1a, 0x19, 0x12, 0x14, 0x10, 0x3d, 0x20, 0x11, 0x20, 0x28, 0x20, 0x28, 0x20, 0x20, 0x20, 0x20,
     0x20, 0x38, 0x20, 0x20, 0x18, 0x03, 0x40, 0x11, 0x60, 0xef, 0x23,
@@ -21,6 +22,37 @@ fn read_corrupted_fixture() -> Result<(), io::Error> {
         }
         Err(error) => match error.source() {
           Some(error) if error.is::<GeometryError>() => {
+            println!("Expected error: {}", error);
+          }
+          _ => {
+            panic!("Unexpected error: {}", error)
+          }
+        },
+      }
+    }
+    Err(_) => {
+      panic!("Parsing failed unexpectedly")
+    }
+  }
+  Ok(())
+}
+
+#[test]
+fn read_corrupted_tags_fixture() -> Result<(), io::Error> {
+  let bytes = [
+    0x1a, 0x19, 0x12, 0x14, 0x10, 0x0, 0x10, 0x0, 0x20, 0x20, 0x10, 0x28, 0x20, 0x28, 0xe0, 0xdf,
+    0x20, 0x20, 0x20, 0x32, 0x20, 0x20, 0x18, 0x1, 0x60, 0xef, 0x1b,
+  ];
+  let reader_result = Reader::new(bytes.to_vec());
+  match reader_result {
+    Ok(reader) => {
+      let features = reader.get_features(0);
+      match features {
+        Ok(_) => {
+          panic!("Parsing should have failed")
+        }
+        Err(error) => match error.source() {
+          Some(error) if error.is::<TagsError>() => {
             println!("Expected error: {}", error);
           }
           _ => {
