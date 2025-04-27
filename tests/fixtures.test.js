@@ -2,6 +2,21 @@ const { Reader } = require('mvt-reader')
 const { readFileSync } = require('fs')
 
 describe('Test fixture', () => {
+  test('032 contains layer metadata', async () => {
+    const reader = new Reader(readFileSync('mvt-fixtures/fixtures/032/tile.mvt'))
+    const layers = reader.getLayerMetadata()
+
+    expect(layers.length).toBe(1)
+
+    const layer = layers[0]
+
+    expect(layer.name).toBe('hello')
+    expect(layer.extent).toBe(4096)
+    expect(layer.version).toBe(2)
+    expect(layer.feature_count).toBe(1)
+    expect(layer.layer_index).toBe(0)
+  })
+
   test('032 parsed successfully (string_value)', async () => {
     const reader = new Reader(readFileSync('mvt-fixtures/fixtures/032/tile.mvt'))
     expect(reader.getLayerNames()).toContain('hello')

@@ -60,6 +60,7 @@
 
 pub mod error;
 pub mod feature;
+pub mod layer;
 
 mod vector_tile;
 
@@ -67,6 +68,7 @@ use feature::{Feature, Value};
 use geo_types::{
   Coord, Geometry, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
 };
+use layer::Layer;
 use prost::{Message, bytes::Bytes};
 use vector_tile::{Tile, tile::GeomType};
 
@@ -132,21 +134,43 @@ impl Reader {
   /// }
   /// ```
   pub fn get_layer_names(&self) -> Result<Vec<String>, error::ParserError> {
-    let mut layer_names = Vec::with_capacity(self.tile.layers.len());
-    for layer in self.tile.layers.iter() {
-      match layer.version {
-        1 | 2 => {
-          layer_names.push(layer.name.clone());
-        }
-        _ => {
-          return Err(error::ParserError::new(error::VersionError::new(
-            layer.name.clone(),
-            layer.version,
-          )));
-        }
-      }
-    }
-    Ok(layer_names)
+    process_layers(&self.tile.layers, |layer, _| layer.name.clone())
+  }
+
+  /// Retrieves metadata about the layers in the vector tile.
+  ///
+  /// # Returns
+  ///
+  /// A result containing a vector of `Layer` structs if successful, or a `ParserError` if there is an error parsing the tile.
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// use mvt_reader::Reader;
+  ///
+  /// let data = vec![/* Vector tile data */];
+  /// let reader = Reader::new(data).unwrap();
+  ///
+  /// match reader.get_layer_metadata() {
+  ///   Ok(layers) => {
+  ///     for layer in layers {
+  ///       println!("Layer: {}", layer.name);
+  ///       println!("Extent: {}", layer.extent);
+  ///     }
+  ///   }
+  ///   Err(error) => {
+  ///     todo!();
+  ///   }
+  /// }
+  /// ```
+  pub fn get_layer_metadata(&self) -> Result<Vec<Layer>, error::ParserError> {
+    process_layers(&self.tile.layers, |layer, index| Layer {
+      layer_index: index,
+      version: layer.version,
+      name: layer.name.clone(),
+      feature_count: layer.features.len(),
+      extent: layer.extent.unwrap_or(4096),
+    })
   }
 
   /// Retrieves the features of a specific layer in the vector tile.
@@ -220,6 +244,28 @@ impl Reader {
       None => Ok(vec![]),
     }
   }
+}
+
+fn process_layers<T, F>(
+  layers: &[vector_tile::tile::Layer],
+  mut processor: F,
+) -> Result<Vec<T>, error::ParserError>
+where
+  F: FnMut(&vector_tile::tile::Layer, usize) -> T,
+{
+  let mut results = Vec::with_capacity(layers.len());
+  for (index, layer) in layers.iter().enumerate() {
+    match layer.version {
+      1 | 2 => results.push(processor(layer, index)),
+      _ => {
+        return Err(error::ParserError::new(error::VersionError::new(
+          layer.name.clone(),
+          layer.version,
+        )));
+      }
+    }
+  }
+  Ok(results)
 }
 
 fn parse_tags(
@@ -408,10 +454,11 @@ pub mod wasm {
 
   use crate::feature::Value;
   use geojson::{Feature, GeoJson, JsonObject, JsonValue, feature::Id};
-  use serde::Serialize;
+  use serde::ser::{Serialize, SerializeStruct};
   use serde_wasm_bindgen::Serializer;
   use wasm_bindgen::prelude::*;
 
+  /// Converts a `Value` into a `serde_json::Value`.
   impl From<Value> for JsonValue {
     fn from(value: Value) -> Self {
       match value {
@@ -447,6 +494,28 @@ pub mod wasm {
       });
 
       geojson.serialize(&Serializer::json_compatible()).unwrap()
+    }
+  }
+
+  /// Converts a `super::layer::Layer` into a `wasm_bindgen::JsValue`.
+  impl From<super::layer::Layer> for wasm_bindgen::JsValue {
+    fn from(layer: super::layer::Layer) -> Self {
+      layer.serialize(&Serializer::json_compatible()).unwrap()
+    }
+  }
+
+  impl Serialize for super::layer::Layer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+      S: serde::ser::Serializer,
+    {
+      let mut state = serializer.serialize_struct("Layer", 5)?;
+      state.serialize_field("layer_index", &self.layer_index)?;
+      state.serialize_field("version", &self.version)?;
+      state.serialize_field("name", &self.name)?;
+      state.serialize_field("feature_count", &self.feature_count)?;
+      state.serialize_field("extent", &self.extent)?;
+      state.end()
     }
   }
 
@@ -507,25 +576,30 @@ pub mod wasm {
     /// ```
     #[wasm_bindgen(js_name = getLayerNames)]
     pub fn get_layer_names(&self, error_callback: Option<js_sys::Function>) -> JsValue {
-      match &self.reader {
-        Some(reader) => match reader.get_layer_names() {
-          Ok(layer_names) => JsValue::from(
-            layer_names
-              .into_iter()
-              .map(JsValue::from)
-              .collect::<js_sys::Array>(),
-          ),
-          Err(error) => {
-            if let Some(callback) = error_callback {
-              callback
-                .call1(&JsValue::NULL, &JsValue::from_str(&format!("{:?}", error)))
-                .unwrap();
-            }
-            JsValue::NULL
-          }
-        },
-        None => JsValue::NULL,
-      }
+      self.handle_result(|reader| reader.get_layer_names(), error_callback)
+    }
+
+    /// Retrieves the layer metadata present in the vector tile.
+    ///
+    /// # Arguments
+    ///
+    /// * `error_callback` - An optional JavaScript callback function to handle errors. It should accept a single parameter which will contain the error message as a string.
+    ///
+    /// # Returns
+    ///
+    /// A JavaScript array containing the layer metadata as objects.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let layers = reader.getLayerMetadata(handleErrors);
+    /// for (let i = 0; i < layers.length; i++) {
+    ///   console.log(layers[i].name);
+    /// }
+    /// ```
+    #[wasm_bindgen(js_name = getLayerMetadata)]
+    pub fn get_layer_metadata(&self, error_callback: Option<js_sys::Function>) -> JsValue {
+      self.handle_result(|reader| reader.get_layer_metadata(), error_callback)
     }
 
     /// Retrieves the features of a specific layer in the vector tile.
@@ -553,14 +627,22 @@ pub mod wasm {
       layer_index: usize,
       error_callback: Option<js_sys::Function>,
     ) -> JsValue {
+      self.handle_result(|reader| reader.get_features(layer_index), error_callback)
+    }
+
+    fn handle_result<T, F>(&self, operation: F, error_callback: Option<js_sys::Function>) -> JsValue
+    where
+      T: IntoIterator,
+      T::Item: Into<JsValue>,
+      F: FnOnce(&super::Reader) -> Result<T, super::error::ParserError>,
+    {
       match &self.reader {
-        Some(reader) => match reader.get_features(layer_index) {
-          Ok(features) => JsValue::from(
-            features
-              .into_iter()
-              .map(JsValue::from)
-              .collect::<js_sys::Array>(),
-          ),
+        Some(reader) => match operation(reader) {
+          Ok(result) => result
+            .into_iter()
+            .map(Into::into)
+            .collect::<js_sys::Array>()
+            .into(),
           Err(error) => {
             if let Some(callback) = error_callback {
               callback
