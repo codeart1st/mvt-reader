@@ -15,8 +15,8 @@
 //!
 //! Then, you can import and use the library in your code:
 //!
-//! ```rust
-//! use mvt_reader::{Reader, error::{ParserError}};
+//! ```no_run
+//! use mvt_reader::{Reader, FlatCoordinateStorage, IdentityTransform, error::{ParserError}};
 //!
 //! fn main() -> Result<(), ParserError> {
 //!   // Read a vector tile from file or data
@@ -31,7 +31,7 @@
 //!
 //!   // Get features for a specific layer
 //!   let layer_index = 0;
-//!   let features = reader.get_features(layer_index)?;
+//!   let features = reader.get_features_iter::<FlatCoordinateStorage, _>(layer_index, IdentityTransform).unwrap();
 //!   for feature in features {
 //!     todo!()
 //!   }
@@ -60,20 +60,18 @@
 
 pub mod error;
 pub mod feature;
+pub mod feature_iter;
+pub mod geometry;
 
 mod vector_tile;
 
-use feature::Feature;
-use geo_types::{
-  Coord, Geometry, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
-};
+use feature::LegacyFeature;
+use feature_iter::FeatureIterator;
+use geometry::{parse_geometry, CoordinateStorage, CoordinateTransform};
 pub use prost::{bytes::Bytes, Message};
 
-/// The dimension used for the vector tile.
-const DIMENSION: u32 = 2;
-
+use vector_tile::tile::GeomType;
 pub use vector_tile::*;
-use tile::GeomType;
 
 /// Reader for decoding and accessing vector tile data.
 pub struct Reader {
@@ -151,6 +149,20 @@ impl Reader {
     Ok(layer_names)
   }
 
+  /// Get features iterator with custom coordinate storage and transform
+  pub fn get_features_iter<S, T>(
+    &self,
+    layer_index: usize,
+    transform: T,
+  ) -> Option<FeatureIterator<S, T>>
+  where
+    S: CoordinateStorage,
+    T: CoordinateTransform,
+  {
+    let layer = self.tile.layers.get(layer_index)?;
+    Some(FeatureIterator::new(layer, transform))
+  }
+
   /// Retrieves the features of a specific layer in the vector tile.
   ///
   /// # Arguments
@@ -180,7 +192,7 @@ impl Reader {
   ///   }
   /// }
   /// ```
-  pub fn get_features(&self, layer_index: usize) -> Result<Vec<Feature>, error::ParserError> {
+  pub fn get_features(&self, layer_index: usize) -> Result<Vec<LegacyFeature>, error::ParserError> {
     let layer = self.tile.layers.get(layer_index);
     match layer {
       Some(layer) => {
@@ -203,7 +215,7 @@ impl Reader {
                   }
                 };
 
-                features.push(Feature {
+                features.push(LegacyFeature {
                   geometry: parsed_geometry,
                   properties: Some(parsed_tags),
                 });
@@ -249,9 +261,12 @@ impl Reader {
   /// }
   /// ```
   pub fn get_extent(&self, layer_index: usize) -> u32 {
-    self.tile.layers.get(layer_index)
-        .and_then(|layer| layer.extent)
-        .unwrap_or(4096)
+    self
+      .tile
+      .layers
+      .get(layer_index)
+      .and_then(|layer| layer.extent)
+      .unwrap_or(4096)
   }
 }
 
@@ -259,8 +274,8 @@ fn parse_tags(
   tags: &[u32],
   keys: &[String],
   values: &[tile::Value],
-) -> Result<std::collections::HashMap<String, String>, error::ParserError> {
-  let mut result = std::collections::HashMap::new();
+) -> Result<serde_json::Map<String, serde_json::Value>, error::ParserError> {
+  let mut result = serde_json::Map::with_capacity(tags.len() / 2);
   for item in tags.chunks(2) {
     if item.len() != 2
       || item[0] > keys.len().try_into().unwrap()
@@ -270,7 +285,9 @@ fn parse_tags(
     }
     result.insert(
       (*keys.get(item[0] as usize).expect("item not found")).clone(),
-      get_string_value((*values.get(item[1] as usize).expect("item not found")).clone()),
+      serde_json::Value::String(get_string_value(
+        (*values.get(item[1] as usize).expect("item not found")).clone(),
+      )),
     );
   }
   Ok(result)
@@ -299,138 +316,6 @@ fn get_string_value(value: tile::Value) -> String {
     return value.bool_value.unwrap().to_string();
   }
   String::new()
-}
-
-fn shoelace_formula(points: &[Point<f32>]) -> f32 {
-  let mut area: f32 = 0.0;
-  let n = points.len();
-  let mut v1 = points[n - 1];
-  for v2 in points.iter().take(n) {
-    area += (v2.y() - v1.y()) * (v2.x() + v1.x());
-    v1 = *v2;
-  }
-  area * 0.5
-}
-
-fn parse_geometry(
-  geometry_data: &[u32],
-  geom_type: GeomType,
-) -> Result<Geometry<f32>, error::ParserError> {
-  if geom_type == GeomType::Unknown {
-    return Err(error::ParserError::new(error::GeometryError::new()));
-  }
-
-  // worst case capacity to prevent reallocation. not needed to be exact.
-  let mut coordinates: Vec<Coord<f32>> = Vec::with_capacity(geometry_data.len());
-  let mut polygons: Vec<Polygon<f32>> = Vec::new();
-  let mut linestrings: Vec<LineString<f32>> = Vec::new();
-
-  let mut cursor: [i32; 2] = [0, 0];
-  let mut parameter_count: u32 = 0;
-
-  for value in geometry_data.iter() {
-    if parameter_count == 0 {
-      let command_integer = value;
-      let id = (command_integer & 0x7) as u8;
-      match id {
-        1 => {
-          // MoveTo
-          parameter_count = (command_integer >> 3) * DIMENSION;
-          if geom_type == GeomType::Linestring && !coordinates.is_empty() {
-            linestrings.push(LineString::new(coordinates));
-            // start with a new linestring
-            coordinates = Vec::with_capacity(geometry_data.len());
-          }
-        }
-        2 => {
-          // LineTo
-          parameter_count = (command_integer >> 3) * DIMENSION;
-        }
-        7 => {
-          // ClosePath
-          let first_coordinate = match coordinates.first() {
-            Some(coord) => coord.to_owned(),
-            None => {
-              return Err(error::ParserError::new(error::GeometryError::new()));
-            }
-          };
-          coordinates.push(first_coordinate);
-
-          let ring = LineString::new(coordinates);
-
-          let area = shoelace_formula(&ring.clone().into_points());
-
-          if area > 0.0 {
-            // exterior ring
-            if !linestrings.is_empty() {
-              // finish previous geometry
-              polygons.push(Polygon::new(
-                linestrings[0].clone(),
-                linestrings[1..].into(),
-              ));
-              linestrings = Vec::new();
-            }
-          }
-
-          linestrings.push(ring);
-          // start a new sequence
-          coordinates = Vec::with_capacity(geometry_data.len());
-        }
-        _ => (),
-      }
-    } else {
-      let parameter_integer = value;
-      let integer_value = ((parameter_integer >> 1) as i32) ^ -((parameter_integer & 1) as i32);
-      if parameter_count % DIMENSION == 0 {
-        cursor[0] = match cursor[0].checked_add(integer_value) {
-          Some(result) => result,
-          None => std::i32::MAX, // clip value
-        };
-      } else {
-        cursor[1] = match cursor[1].checked_add(integer_value) {
-          Some(result) => result,
-          None => std::i32::MAX, // clip value
-        };
-        coordinates.push(Coord {
-          x: cursor[0] as f32,
-          y: cursor[1] as f32,
-        });
-      }
-      parameter_count -= 1;
-    }
-  }
-
-  match geom_type {
-    GeomType::Linestring => {
-      // the last linestring is in coordinates vec
-      if !linestrings.is_empty() {
-        linestrings.push(LineString::new(coordinates));
-        return Ok(MultiLineString::new(linestrings).into());
-      }
-      Ok(LineString::new(coordinates).into())
-    }
-    GeomType::Point => Ok(
-      MultiPoint(
-        coordinates
-          .iter()
-          .map(|coord| Point::new(coord.x, coord.y))
-          .collect(),
-      )
-      .into(),
-    ),
-    GeomType::Polygon => {
-      if !linestrings.is_empty() {
-        // finish pending polygon
-        polygons.push(Polygon::new(
-          linestrings[0].clone(),
-          linestrings[1..].into(),
-        ));
-        return Ok(MultiPolygon::new(polygons).into());
-      }
-      Ok(polygons.first().unwrap().to_owned().into())
-    }
-    GeomType::Unknown => Err(error::ParserError::new(error::GeometryError::new())),
-  }
 }
 
 #[cfg(feature = "wasm")]

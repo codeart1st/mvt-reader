@@ -2,7 +2,10 @@ use std::fs::{read, read_dir, DirEntry};
 use std::path::PathBuf;
 use std::{io::Error, result::Result};
 
-use mvt_reader::Reader;
+use mvt_reader::{
+  geometry::{FlatCoordinateStorage, IdentityTransform},
+  Reader,
+};
 
 #[test]
 fn read_all_fixtures() -> Result<(), Error> {
@@ -23,8 +26,8 @@ fn read_all_fixtures() -> Result<(), Error> {
           }
         };
         for (i, _) in layer_names.iter().enumerate() {
-          let features = reader.get_features(i);
-          assert!(!features.unwrap().is_empty());
+          let features = reader.get_features_iter::<FlatCoordinateStorage, _>(i, IdentityTransform);
+          assert!(features.unwrap().count() > 0);
         }
         println!("found layer names: {:?}", layer_names);
       }

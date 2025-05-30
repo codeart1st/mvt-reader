@@ -1,6 +1,7 @@
 mod common;
 
 use common::{get_all_fixtures, TileContent, TileInfo};
+use mvt_reader::geometry::{FlatCoordinateStorage, IdentityTransform};
 
 use std::fs::{read, read_to_string};
 use std::{io::Error, result::Result};
@@ -53,17 +54,17 @@ fn read_all_fixtures() -> Result<(), Error> {
         }
 
         for (i, _) in layer_names.iter().enumerate() {
-          let features = reader.get_features(i);
+          let features = reader.get_features_iter::<FlatCoordinateStorage, _>(i, IdentityTransform);
           match features {
-            Ok(features) => {
-              println!("Parsed {} features", features.len());
+            Some(features) => {
+              println!("Parsed {} features", features.count());
             }
-            Err(error) => {
+            None => {
               let info_str = read_to_string(info_file)?;
               let info_json: TileInfo = serde_json::from_str(info_str.as_str())?;
               let mvt_file_path_string = mvt_file.to_str().unwrap();
 
-              println!("{:?}", error);
+              println!("Feature could not find");
               assert!(
                 (!info_json.validity.v1 && !info_json.validity.v2)
                   || mvt_file_path_string.contains("016") // unknown geometry type
