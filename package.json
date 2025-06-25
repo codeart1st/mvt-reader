@@ -11,7 +11,7 @@
     "@semantic-release-cargo/semantic-release-cargo": "2.4.44",
     "@semantic-release/git": "10.0.1",
     "@semantic-release/github": "11.0.3",
-    "jest": "30.0.2",
+    "jest": "30.0.3",
     "semantic-release": "24.2.5"
   },
   "jest": {
