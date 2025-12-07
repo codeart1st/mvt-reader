@@ -102,5 +102,8 @@
         }
       ]
     ]
+  },
+  "publishConfig": {
+    "provenance": true
   }
 }
