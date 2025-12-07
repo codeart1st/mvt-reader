@@ -17,7 +17,7 @@ jobs:
   publish:
     needs: ci
     timeout-minutes: 20
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       issues: write

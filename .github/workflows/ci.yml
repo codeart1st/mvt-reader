@@ -21,7 +21,7 @@ permissions:
 jobs:
   lint:
     timeout-minutes: 10
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v6.0.1
@@ -45,7 +45,7 @@ jobs:
 
   build_native:
     timeout-minutes: 10
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v6.0.1
@@ -68,7 +68,7 @@ jobs:
 
   build_wasm:
     timeout-minutes: 10
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v6.0.1
@@ -99,7 +99,7 @@ jobs:
 
   test_native:
     timeout-minutes: 10
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v6.0.1
@@ -124,7 +124,7 @@ jobs:
   test_wasm:
     needs: build_wasm
     timeout-minutes: 10
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v6.0.1
