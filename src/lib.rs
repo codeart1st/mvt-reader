@@ -394,7 +394,7 @@ fn parse_geometry(
     } else {
       let parameter_integer = value;
       let integer_value = ((parameter_integer >> 1) as i32) ^ -((parameter_integer & 1) as i32);
-      if parameter_count % DIMENSION == 0 {
+      if parameter_count.is_multiple_of(DIMENSION) {
         cursor[0] = match cursor[0].checked_add(integer_value) {
           Some(result) => result,
           None => i32::MAX, // clip value
