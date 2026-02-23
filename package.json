@@ -59,8 +59,8 @@
                 {
                   "file": "src/lib.rs",
                   "hasChanged": true,
-                  "numMatches": 2,
-                  "numReplacements": 2
+                  "numMatches": 1,
+                  "numReplacements": 1
                 }
               ],
               "countMatches": true
@@ -73,8 +73,8 @@
                 {
                   "file": "src/lib.rs",
                   "hasChanged": true,
-                  "numMatches": 1,
-                  "numReplacements": 1
+                  "numMatches": 2,
+                  "numReplacements": 2
                 }
               ],
               "countMatches": true
