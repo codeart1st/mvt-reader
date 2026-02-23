@@ -50,6 +50,10 @@ jobs:
       - name: Verify npm package signatures
         run: npm audit signatures
 
+      - name: Authenticate with crates.io
+        id: auth
+        uses: rust-lang/crates-io-auth-action@v1.0.3
+
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
