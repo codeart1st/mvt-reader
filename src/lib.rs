@@ -45,13 +45,20 @@
 //! The `mvt-reader` library provides the following features:
 //!
 //! - `wasm`: Enables the compilation of the library as a WebAssembly module, allowing usage in JavaScript/TypeScript projects.
+//! - `protoc`: Enables the use of `prost-build` to compile the protobuf definition sources from `vector_tile.proto`. This is useful for development and testing purposes, but it is not required for using the library in production. If the `protoc` feature is not enabled, the library will use pre-generated Rust code for the protobuf definitions.
 //!
 //! To enable the `wasm` feature, add the following to your `Cargo.toml` file:
 //!
 //! ```toml
-//! [dependencies.mvt-reader]
-//! version = "2.2.0"
-//! features = ["wasm"]
+//! [dependencies]
+//! mvt-reader = { version = "2.2.0", features = ["wasm"] }
+//! ```
+//! 
+//! To enable the `protoc` feature, add the following to your `Cargo.toml` file:
+//! 
+//! ```toml
+//! [dependencies]
+//! mvt-reader = { version = "2.2.0", features = ["protoc"] }
 //! ```
 //!
 //! # License

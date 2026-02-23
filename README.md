@@ -21,6 +21,7 @@
 - Decodes and reads Mapbox vector tiles in Rust
 - Provides an API for accessing layer names and features within a vector tile
 - Can be used as a WebAssembly module in JavaScript (enabled by the `wasm` feature)
+- Optionally uses `prost-build` to compile the protobuf definition sources from `vector_tile.proto` (enabled by the `protoc` feature). Needs `protoc` to be installed on the system. If the `protoc` feature is not enabled, the library uses pre-generated Rust code for the protobuf definitions.
 
 ## Build the project
 

@@ -57,7 +57,12 @@ jobs:
         uses: ./.github/actions/prepare-build-env
 
       - name: Run cargo build
-        run: cargo build
+        run: |
+          cargo build --features protoc-generated
+          if [ -n "$(git status --porcelain src/generated/vector_tile.rs)" ]; then
+            echo "Error: src/generated/vector_tile.rs is not up to date. Please run `cargo build --features protoc-generated` and commit the changes.";
+            exit 1;
+          fi
 
       - name: Post build environemnt
         if: always()
