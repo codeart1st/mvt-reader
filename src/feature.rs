@@ -9,8 +9,7 @@
 //! - `Feature`: Represents a feature with geometry, an optional id and optional properties.
 
 use std::collections::HashMap;
-
-use geo_types::Geometry;
+use geo_types::{CoordNum, Geometry};
 
 /// An enumeration representing the value of a property associated with a feature.
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -27,9 +26,9 @@ pub enum Value {
 
 /// A structure representing a feature in a vector tile.
 #[derive(Debug, Clone)]
-pub struct Feature {
+pub struct Feature<T: CoordNum = f32> {
   /// The geometry of the feature.
-  pub geometry: Geometry<f32>,
+  pub geometry: Geometry<T>,
 
   /// Optional identifier for the feature.
   pub id: Option<u64>,
@@ -38,7 +37,7 @@ pub struct Feature {
   pub properties: Option<HashMap<String, Value>>,
 }
 
-impl Feature {
+impl<T: CoordNum> Feature<T> {
   /// Retrieves the geometry of the feature.
   ///
   /// # Returns
@@ -60,7 +59,7 @@ impl Feature {
   /// let geometry = feature.get_geometry();
   /// println!("{:?}", geometry);
   /// ```
-  pub fn get_geometry(&self) -> &Geometry<f32> {
+  pub fn get_geometry(&self) -> &Geometry<T> {
     &self.geometry
   }
 }
