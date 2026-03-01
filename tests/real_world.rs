@@ -3,6 +3,7 @@ use std::fs::{DirEntry, read, read_dir};
 use std::path::PathBuf;
 use std::{io, result::Result};
 
+use geo_types::CoordNum;
 use mvt_reader::error::TagsError;
 use mvt_reader::{Reader, error::GeometryError};
 
@@ -69,33 +70,37 @@ fn read_corrupted_tags_fixture() -> Result<(), io::Error> {
 }
 
 #[test]
-fn read_all_fixtures() -> Result<(), io::Error> {
+fn read_all_fixtures_f32() -> Result<(), io::Error> {
+  assert_all_fixtures_readable::<f32>("f32")
+}
+
+#[test]
+fn read_all_fixtures_i32() -> Result<(), io::Error> {
+  assert_all_fixtures_readable::<i32>("i32")
+}
+
+#[test]
+fn read_all_fixtures_i16() -> Result<(), io::Error> {
+  assert_all_fixtures_readable::<i16>("i16")
+}
+
+fn assert_all_fixtures_readable<T: CoordNum>(label: &str) -> Result<(), io::Error> {
   for mvt_file in get_all_real_world_fixtures()?.iter() {
     if !mvt_file.extension().unwrap().eq_ignore_ascii_case("mvt") {
       println!("Skipped file {:?}", mvt_file);
       continue;
     }
-    println!("Read {:?}", mvt_file);
+
+    println!("Read {:?} ({})", mvt_file, label);
+
     let bytes = read(mvt_file)?;
-    let reader_result = Reader::new(bytes.to_vec());
-    match reader_result {
-      Ok(reader) => {
-        let layer_names = match reader.get_layer_names() {
-          Ok(layer_names) => layer_names,
-          Err(error) => {
-            panic!("{}", error);
-          }
-        };
-        for (i, _) in layer_names.iter().enumerate() {
-          let features = reader.get_features(i);
-          assert!(!features.unwrap().is_empty());
-        }
-        println!("found layer names: {:?}", layer_names);
-      }
-      Err(_) => {
-        panic!("Parsing failed unexpectedly")
-      }
+    let reader = Reader::new(bytes.to_vec()).expect("Parsing failed unexpectedly");
+    let layer_names = reader.get_layer_names().expect("Failed to get layer names");
+    for (i, _) in layer_names.iter().enumerate() {
+      let features = reader.get_features_as::<T>(i);
+      assert!(!features.unwrap().is_empty());
     }
+    println!("found layer names: {:?}", layer_names);
   }
   Ok(())
 }

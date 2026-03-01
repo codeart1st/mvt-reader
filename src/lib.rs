@@ -73,9 +73,10 @@ mod vector_tile;
 
 use feature::{Feature, Value};
 use geo_types::{
-  Coord, Geometry, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
+  Coord, CoordNum, Geometry, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
 };
 use layer::Layer;
+use num_traits::NumCast;
 use prost::{Message, bytes::Bytes};
 use vector_tile::{Tile, tile::GeomType};
 
@@ -210,6 +211,41 @@ impl Reader {
   /// }
   /// ```
   pub fn get_features(&self, layer_index: usize) -> Result<Vec<Feature>, error::ParserError> {
+    self.get_features_as::<f32>(layer_index)
+  }
+
+  /// Retrieves the features of a specific layer with geometry coordinates in the specified numeric type.
+  ///
+  /// This is a generic version of [`get_features`](Reader::get_features) that allows you to choose
+  /// the coordinate type for the geometry. Supported types include `f32` (default), `i32`, and `i16`.
+  ///
+  /// # Arguments
+  ///
+  /// * `layer_index` - The index of the layer.
+  ///
+  /// # Type Parameters
+  ///
+  /// * `T` - The numeric type for geometry coordinates (e.g. `f32`, `i32`, `i16`).
+  ///
+  /// # Returns
+  ///
+  /// A result containing a vector of features if successful, or a `ParserError` if there is an error parsing the tile or accessing the layer.
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// use mvt_reader::Reader;
+  ///
+  /// let data = vec![/* Vector tile data */];
+  /// let reader = Reader::new(data).unwrap();
+  ///
+  /// // Get features with i32 coordinates
+  /// let features = reader.get_features_as::<i32>(0);
+  ///
+  /// // Get features with i16 coordinates
+  /// let features = reader.get_features_as::<i16>(0);
+  /// ```
+  pub fn get_features_as<T: CoordNum>(&self, layer_index: usize) -> Result<Vec<Feature<T>>, error::ParserError> {
     let layer = self.tile.layers.get(layer_index);
     match layer {
       Some(layer) => {
@@ -218,7 +254,7 @@ impl Reader {
           if let Some(geom_type) = feature.r#type {
             match GeomType::try_from(geom_type) {
               Ok(geom_type) => {
-                let parsed_geometry = match parse_geometry(&feature.geometry, geom_type) {
+                let parsed_geometry = match parse_geometry::<T>(&feature.geometry, geom_type) {
                   Ok(parsed_geometry) => parsed_geometry,
                   Err(error) => {
                     return Err(error);
@@ -321,29 +357,33 @@ fn map_value(value: vector_tile::tile::Value) -> Value {
   Value::Null
 }
 
-fn shoelace_formula(points: &[Point<f32>]) -> f32 {
+fn shoelace_formula<T: CoordNum>(points: &[Point<T>]) -> f32 {
   let mut area: f32 = 0.0;
   let n = points.len();
   let mut v1 = points[n - 1];
   for v2 in points.iter().take(n) {
-    area += (v2.y() - v1.y()) * (v2.x() + v1.x());
+    let v2y: f32 = NumCast::from(v2.y()).unwrap_or(0.0);
+    let v1y: f32 = NumCast::from(v1.y()).unwrap_or(0.0);
+    let v2x: f32 = NumCast::from(v2.x()).unwrap_or(0.0);
+    let v1x: f32 = NumCast::from(v1.x()).unwrap_or(0.0);
+    area += (v2y - v1y) * (v2x + v1x);
     v1 = *v2;
   }
   area * 0.5
 }
 
-fn parse_geometry(
+fn parse_geometry<T: CoordNum>(
   geometry_data: &[u32],
   geom_type: GeomType,
-) -> Result<Geometry<f32>, error::ParserError> {
+) -> Result<Geometry<T>, error::ParserError> {
   if geom_type == GeomType::Unknown {
     return Err(error::ParserError::new(error::GeometryError::new()));
   }
 
   // worst case capacity to prevent reallocation. not needed to be exact.
-  let mut coordinates: Vec<Coord<f32>> = Vec::with_capacity(geometry_data.len());
-  let mut polygons: Vec<Polygon<f32>> = Vec::new();
-  let mut linestrings: Vec<LineString<f32>> = Vec::new();
+  let mut coordinates: Vec<Coord<T>> = Vec::with_capacity(geometry_data.len());
+  let mut polygons: Vec<Polygon<T>> = Vec::new();
+  let mut linestrings: Vec<LineString<T>> = Vec::new();
 
   let mut cursor: [i32; 2] = [0, 0];
   let mut parameter_count: u32 = 0;
@@ -412,8 +452,8 @@ fn parse_geometry(
           None => i32::MAX, // clip value
         };
         coordinates.push(Coord {
-          x: cursor[0] as f32,
-          y: cursor[1] as f32,
+          x: NumCast::from(cursor[0]).unwrap_or_else(T::zero),
+          y: NumCast::from(cursor[1]).unwrap_or_else(T::zero),
         });
       }
       parameter_count -= 1;

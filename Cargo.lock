@@ -383,6 +383,7 @@ dependencies = [
  "geo-types",
  "geojson",
  "js-sys",
+ "num-traits",
  "prost 0.13.5",
  "prost-build",
  "serde",

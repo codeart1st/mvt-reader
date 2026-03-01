@@ -18,7 +18,8 @@ protoc = ["prost-build"]
 protoc-generated = ["prost-build"]
 
 [dependencies]
-geo-types = "0.7"
+geo-types = { version = "0.7", default-features = false }
+num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 prost = { version = "0.13", default-features = false, features = ["prost-derive", "std"] }
 wasm-bindgen = { version = "0.2", optional = true }
 serde-wasm-bindgen = { version = "0.6", optional = true }
