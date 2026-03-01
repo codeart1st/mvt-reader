@@ -10,7 +10,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! mvt-reader = "2.3.0-alpha.3"
+//! mvt-reader = "2.3.0"
 //! ```
 //!
 //! Then, you can import and use the library in your code:
@@ -51,14 +51,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! mvt-reader = { version = "2.3.0-alpha.3", features = ["wasm"] }
+//! mvt-reader = { version = "2.3.0", features = ["wasm"] }
 //! ```
 //! 
 //! To enable the `protoc` feature, add the following to your `Cargo.toml` file:
 //! 
 //! ```toml
 //! [dependencies]
-//! mvt-reader = { version = "2.3.0-alpha.3", features = ["protoc"] }
+//! mvt-reader = { version = "2.3.0", features = ["protoc"] }
 //! ```
 //!
 //! # License
