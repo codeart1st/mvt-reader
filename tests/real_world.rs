@@ -1,11 +1,9 @@
-use std::error::Error;
 use std::fs::{DirEntry, read, read_dir};
 use std::path::PathBuf;
 use std::{io, result::Result};
 
 use geo_types::CoordNum;
-use mvt_reader::error::TagsError;
-use mvt_reader::{Reader, error::GeometryError};
+use mvt_reader::{Reader, error::ParserError};
 
 #[test]
 fn read_corrupted_geometry_fixture() -> Result<(), io::Error> {
@@ -21,8 +19,8 @@ fn read_corrupted_geometry_fixture() -> Result<(), io::Error> {
         Ok(_) => {
           panic!("Parsing should have failed")
         }
-        Err(error) => match error.source() {
-          Some(error) if error.is::<GeometryError>() => {
+        Err(error) => match error {
+          ParserError::InvalidGeometry => {
             println!("Expected error: {}", error);
           }
           _ => {
@@ -52,8 +50,8 @@ fn read_corrupted_tags_fixture() -> Result<(), io::Error> {
         Ok(_) => {
           panic!("Parsing should have failed")
         }
-        Err(error) => match error.source() {
-          Some(error) if error.is::<TagsError>() => {
+        Err(error) => match error {
+          ParserError::InvalidTags => {
             println!("Expected error: {}", error);
           }
           _ => {
