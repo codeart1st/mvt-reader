@@ -108,12 +108,8 @@ impl Reader {
   /// let reader = Reader::new(data);
   /// ```
   pub fn new(data: Vec<u8>) -> Result<Self, error::ParserError> {
-    match Tile::decode(Bytes::from(data)) {
-      Ok(tile) => Ok(Self { tile }),
-      Err(error) => Err(error::ParserError::new(error::DecodeError::new(Box::new(
-        error,
-      )))),
-    }
+    let tile = Tile::decode(Bytes::from(data))?;
+    Ok(Self { tile })
   }
 
   /// Retrieves the names of the layers in the vector tile.
@@ -252,34 +248,15 @@ impl Reader {
         let mut features = Vec::with_capacity(layer.features.len());
         for feature in layer.features.iter() {
           if let Some(geom_type) = feature.r#type {
-            match GeomType::try_from(geom_type) {
-              Ok(geom_type) => {
-                let parsed_geometry = match parse_geometry::<T>(&feature.geometry, geom_type) {
-                  Ok(parsed_geometry) => parsed_geometry,
-                  Err(error) => {
-                    return Err(error);
-                  }
-                };
+            let geom_type = GeomType::try_from(geom_type).map_err(|_| error::ParserError::InvalidGeometry)?;
+            let parsed_geometry = parse_geometry::<T>(&feature.geometry, geom_type)?;
+            let parsed_tags = parse_tags(&feature.tags, &layer.keys, &layer.values)?;
 
-                let parsed_tags = match parse_tags(&feature.tags, &layer.keys, &layer.values) {
-                  Ok(parsed_tags) => parsed_tags,
-                  Err(error) => {
-                    return Err(error);
-                  }
-                };
-
-                features.push(Feature {
-                  geometry: parsed_geometry,
-                  id: feature.id,
-                  properties: Some(parsed_tags),
-                });
-              }
-              Err(error) => {
-                return Err(error::ParserError::new(error::DecodeError::new(Box::new(
-                  error,
-                ))));
-              }
-            }
+            features.push(Feature {
+              geometry: parsed_geometry,
+              id: feature.id,
+              properties: Some(parsed_tags),
+            });
           }
         }
         Ok(features)
@@ -301,10 +278,10 @@ where
     match layer.version {
       1 | 2 => results.push(processor(layer, index)),
       _ => {
-        return Err(error::ParserError::new(error::VersionError::new(
-          layer.name.clone(),
-          layer.version,
-        )));
+        return Err(error::ParserError::UnsupportedVersion {
+          layer_name: layer.name.clone(),
+          version: layer.version,
+        });
       }
     }
   }
@@ -319,10 +296,10 @@ fn parse_tags(
   let mut result = std::collections::HashMap::new();
   for item in tags.chunks(2) {
     if item.len() != 2
-      || item[0] >= keys.len().try_into().unwrap()
-      || item[1] >= values.len().try_into().unwrap()
+      || item[0] as usize >= keys.len()
+      || item[1] as usize >= values.len()
     {
-      return Err(error::ParserError::new(error::TagsError::new()));
+      return Err(error::ParserError::InvalidTags);
     }
     result.insert(
       keys[item[0] as usize].clone(),
@@ -377,7 +354,7 @@ fn parse_geometry<T: CoordNum>(
   geom_type: GeomType,
 ) -> Result<Geometry<T>, error::ParserError> {
   if geom_type == GeomType::Unknown {
-    return Err(error::ParserError::new(error::GeometryError::new()));
+    return Err(error::ParserError::InvalidGeometry);
   }
 
   // worst case capacity to prevent reallocation. not needed to be exact.
@@ -411,7 +388,7 @@ fn parse_geometry<T: CoordNum>(
           let first_coordinate = match coordinates.first() {
             Some(coord) => coord.to_owned(),
             None => {
-              return Err(error::ParserError::new(error::GeometryError::new()));
+              return Err(error::ParserError::InvalidGeometry);
             }
           };
           coordinates.push(first_coordinate);
@@ -489,10 +466,10 @@ fn parse_geometry<T: CoordNum>(
       }
       match polygons.first() {
         Some(polygon) => Ok(polygon.to_owned().into()),
-        None => Err(error::ParserError::new(error::GeometryError::new())),
+        None => Err(error::ParserError::InvalidGeometry),
       }
     }
-    GeomType::Unknown => Err(error::ParserError::new(error::GeometryError::new())),
+    GeomType::Unknown => Err(error::ParserError::InvalidGeometry),
   }
 }
 
