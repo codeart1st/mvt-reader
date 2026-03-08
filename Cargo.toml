@@ -18,6 +18,7 @@ protoc = ["prost-build"]
 protoc-generated = ["prost-build"]
 
 [dependencies]
+thiserror = { version = "2.0", default-features = false }
 geo-types = { version = "0.7", default-features = false }
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 prost = { version = "0.13", default-features = false, features = ["prost-derive", "std"] }
