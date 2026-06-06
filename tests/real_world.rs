@@ -96,7 +96,13 @@ fn assert_all_fixtures_readable<T: CoordNum>(label: &str) -> Result<(), io::Erro
     let layer_names = reader.get_layer_names().expect("Failed to get layer names");
     for (i, _) in layer_names.iter().enumerate() {
       let features = reader.get_features_as::<T>(i);
-      assert!(!features.unwrap().is_empty());
+      match features {
+        Ok(f) => assert!(!f.is_empty()),
+        Err(ParserError::CoordinateOverflow { .. }) => {
+          println!("CoordinateOverflow for layer {} (expected for small types)", i);
+        }
+        Err(e) => panic!("Unexpected error: {:?}", e),
+      }
     }
     println!("found layer names: {:?}", layer_names);
   }

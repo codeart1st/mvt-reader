@@ -428,10 +428,11 @@ fn parse_geometry<T: CoordNum>(
           Some(result) => result,
           None => i32::MAX, // clip value
         };
-        coordinates.push(Coord {
-          x: NumCast::from(cursor[0]).unwrap_or_else(T::zero),
-          y: NumCast::from(cursor[1]).unwrap_or_else(T::zero),
-        });
+        let x = NumCast::from(cursor[0])
+          .ok_or(error::ParserError::CoordinateOverflow { value: cursor[0] })?;
+        let y = NumCast::from(cursor[1])
+          .ok_or(error::ParserError::CoordinateOverflow { value: cursor[1] })?;
+        coordinates.push(Coord { x, y });
       }
       parameter_count -= 1;
     }
