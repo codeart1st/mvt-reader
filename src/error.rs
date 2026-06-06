@@ -35,4 +35,10 @@ pub enum ParserError {
   /// The geometry section of a feature is malformed.
   #[error("Geometry section contains errors")]
   InvalidGeometry,
+
+  /// A coordinate value does not fit in the requested numeric type.
+  #[error("Coordinate value {value} overflows the requested type")]
+  CoordinateOverflow {
+    value: i32,
+  }
 }
