@@ -21,7 +21,7 @@ protoc-generated = ["prost-build"]
 thiserror = { version = "2.0", default-features = false }
 geo-types = { version = "0.7", default-features = false }
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
-prost = { version = "0.13", default-features = false, features = ["prost-derive", "std"] }
+prost = { version = "0.14" }
 wasm-bindgen = { version = "0.2", optional = true }
 serde-wasm-bindgen = { version = "0.6", optional = true }
 js-sys = { version = "0.3", optional = true }
@@ -30,9 +30,8 @@ serde = { version = "1.0", optional = true }
 serde_json = { version = "1.0", optional = true }
 
 [dev-dependencies]
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.150"
-prost = { version = "0.13.5" } # for testing we need default-features to be enabled
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
 
 [build-dependencies]
 prost-build = { version = "0.14.4", optional = true }
