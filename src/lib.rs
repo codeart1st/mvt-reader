@@ -71,6 +71,7 @@ pub mod layer;
 
 mod vector_tile;
 
+use core::option::Option::None;
 use feature::{Feature, Value};
 use geo_types::{
   Coord, CoordNum, Geometry, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
@@ -419,15 +420,9 @@ fn parse_geometry<T: CoordNum>(
       let parameter_integer = value;
       let integer_value = ((parameter_integer >> 1) as i32) ^ -((parameter_integer & 1) as i32);
       if parameter_count.is_multiple_of(DIMENSION) {
-        cursor[0] = match cursor[0].checked_add(integer_value) {
-          Some(result) => result,
-          None => i32::MAX, // clip value
-        };
+        cursor[0] = cursor[0].checked_add(integer_value).unwrap_or(i32::MAX); // clip value
       } else {
-        cursor[1] = match cursor[1].checked_add(integer_value) {
-          Some(result) => result,
-          None => i32::MAX, // clip value
-        };
+        cursor[1] = cursor[1].checked_add(integer_value).unwrap_or(i32::MAX); // clip value
         let x = NumCast::from(cursor[0])
           .ok_or(error::ParserError::CoordinateOverflow { value: cursor[0] })?;
         let y = NumCast::from(cursor[1])
